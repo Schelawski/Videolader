@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Everything that does not need Windows Forms: input parsing, yt-dlp calls, YouTube API,
+    subtitle conversion, file handling. Targets plain net10.0 so the tests also run outside Windows.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Videolader.Core</RootNamespace>
+    <AssemblyName>Videolader.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Videolader.Tests" />
+  </ItemGroup>
+
+</Project>
