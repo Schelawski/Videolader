@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Videolader.Core;
 
 /// <summary>
@@ -8,8 +10,23 @@ public sealed class AppSettings
     /// <summary>Folder the videos are saved to.</summary>
     public string OutputFolder { get; set; } = string.Empty;
 
-    /// <summary>Optional YouTube Data API v3 key. Only used to read playlists and titles.</summary>
+    /// <summary>
+    /// Optional YouTube Data API v3 key. Only used to read playlists and titles.
+    /// Not written to the file directly: see <see cref="ApiKeyProtected"/> and <see cref="PlainApiKey"/>.
+    /// </summary>
+    [JsonIgnore]
     public string ApiKey { get; set; } = string.Empty;
+
+    /// <summary>The API key encrypted by the <see cref="ISecretProtector"/> (Base64). Set by <see cref="SettingsStore"/>.</summary>
+    public string ApiKeyProtected { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The API key in plain text, as older versions stored it (<c>"ApiKey"</c> in the file). Only read for migration,
+    /// and written only when no <see cref="ISecretProtector"/> is available.
+    /// </summary>
+    [JsonPropertyName("ApiKey")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? PlainApiKey { get; set; }
 
     public VideoQuality Quality { get; set; } = VideoQuality.Max1080;
 

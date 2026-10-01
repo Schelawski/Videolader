@@ -15,7 +15,7 @@ internal sealed class MainForm : Form
 
     private static readonly HttpClient Http = CreateHttpClient();
 
-    private readonly SettingsStore _store = new();
+    private readonly SettingsStore _store = new(new DpapiSecretProtector());
     private readonly AppSettings _settings;
     private readonly string _toolsDirectory;
     private readonly List<VideoRow> _rows = [];

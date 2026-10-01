@@ -183,6 +183,73 @@ public class SettingsStoreTests
         Assert.Equal(AppSettings.MaxPauseSeconds, loaded.PauseSeconds);
     }
 
+    /// <summary>Reversible stand-in for DPAPI; "other-user:" values cannot be decrypted.</summary>
+    private sealed class FakeProtector : ISecretProtector
+    {
+        public string Protect(string plainText) => "enc:" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(plainText));
+
+        public string? Unprotect(string protectedText) =>
+            protectedText.StartsWith("enc:", StringComparison.Ordinal)
+                ? System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(protectedText[4..]))
+                : null;
+    }
+
+    [Fact]
+    public void Api_key_is_stored_encrypted_and_not_in_plain_text()
+    {
+        using var primary = new TempFolder();
+        using var fallback = new TempFolder();
+        var store = new SettingsStore(primary.Path, fallback.Path, new FakeProtector());
+
+        store.Save(new AppSettings { ApiKey = "AIzaSECRET" });
+
+        var text = File.ReadAllText(Path.Combine(primary.Path, SettingsStore.FileName));
+        Assert.DoesNotContain("AIzaSECRET", text);
+        Assert.Equal("AIzaSECRET", store.Load().ApiKey);
+    }
+
+    [Fact]
+    public void Plain_text_key_of_older_version_is_migrated_on_load()
+    {
+        using var primary = new TempFolder();
+        using var fallback = new TempFolder();
+        primary.File(SettingsStore.FileName, """{ "ApiKey": "AIzaOLD", "PauseSeconds": 5 }""");
+        var store = new SettingsStore(primary.Path, fallback.Path, new FakeProtector());
+
+        var loaded = store.Load();
+
+        Assert.Equal("AIzaOLD", loaded.ApiKey);
+        Assert.Equal(5, loaded.PauseSeconds);
+        var text = File.ReadAllText(Path.Combine(primary.Path, SettingsStore.FileName));
+        Assert.DoesNotContain("AIzaOLD", text);
+        Assert.Equal("AIzaOLD", store.Load().ApiKey);
+    }
+
+    [Fact]
+    public void Key_that_cannot_be_decrypted_gives_empty_key()
+    {
+        using var primary = new TempFolder();
+        using var fallback = new TempFolder();
+        primary.File(SettingsStore.FileName, """{ "ApiKeyProtected": "other-user:xyz", "PauseSeconds": 7 }""");
+
+        var loaded = new SettingsStore(primary.Path, fallback.Path, new FakeProtector()).Load();
+
+        Assert.Equal(string.Empty, loaded.ApiKey);
+        Assert.Equal(7, loaded.PauseSeconds);
+    }
+
+    [Fact]
+    public void Without_protector_the_key_stays_plain_text_as_before()
+    {
+        using var primary = new TempFolder();
+        using var fallback = new TempFolder();
+        var store = new SettingsStore(primary.Path, fallback.Path);
+
+        store.Save(new AppSettings { ApiKey = "AIzaPLAIN" });
+
+        Assert.Equal("AIzaPLAIN", store.Load().ApiKey);
+    }
+
     [Fact]
     public void Corrupt_file_gives_defaults()
     {

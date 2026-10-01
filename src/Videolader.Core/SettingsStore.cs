@@ -23,15 +23,20 @@ public sealed class SettingsStore
     private readonly string _fallbackPath;
     private bool _primaryWritable = true;
 
-    public SettingsStore()
+    private readonly ISecretProtector? _protector;
+
+    public SettingsStore(ISecretProtector? protector = null)
         : this(
             AppContext.BaseDirectory,
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Videolader"))
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Videolader"),
+            protector)
     {
     }
 
-    public SettingsStore(string primaryDirectory, string fallbackDirectory)
+    /// <param name="protector">Encrypts the API key in the file. Without one the key is stored in plain text.</param>
+    public SettingsStore(string primaryDirectory, string fallbackDirectory, ISecretProtector? protector = null)
     {
+        _protector = protector;
         _primaryPath = Path.Combine(primaryDirectory, FileName);
         _fallbackPath = Path.Combine(fallbackDirectory, FileName);
         CurrentPath = _primaryPath;
@@ -55,8 +60,11 @@ public sealed class SettingsStore
                 if (settings is null)
                     continue;
 
+                var migrate = ReadApiKey(settings);
                 settings.Normalize();
                 CurrentPath = path;
+                if (migrate)
+                    TryRewrite(settings);
                 return settings;
             }
             catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or NotSupportedException)
@@ -75,7 +83,8 @@ public sealed class SettingsStore
     public void Save(AppSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        var json = JsonSerializer.Serialize(settings, JsonOptions);
+        PrepareApiKey(settings);
+        var json =JsonSerializer.Serialize(settings, JsonOptions);
 
         if (_primaryWritable)
         {
@@ -99,6 +108,54 @@ public sealed class SettingsStore
         catch (UnauthorizedAccessException ex)
         {
             throw new IOException(ex.Message, ex);
+        }
+    }
+
+    /// <summary>
+    /// Fills <see cref="AppSettings.ApiKey"/> from the encrypted value, or from the plain text of an older version.
+    /// Returns true if a plain text key should now be rewritten encrypted.
+    /// </summary>
+    private bool ReadApiKey(AppSettings settings)
+    {
+        var plain = settings.PlainApiKey?.Trim() ?? string.Empty;
+        settings.ApiKey = string.Empty;
+
+        if (_protector is not null && !string.IsNullOrEmpty(settings.ApiKeyProtected))
+        {
+            // Null = encrypted by another Windows user or on another computer: the key has to be entered again.
+            settings.ApiKey = _protector.Unprotect(settings.ApiKeyProtected) ?? string.Empty;
+            return false;
+        }
+
+        settings.ApiKey = plain;
+        return _protector is not null && plain.Length > 0;
+    }
+
+    /// <summary>Sets the file fields: encrypted if possible, otherwise (no protector) plain text as before.</summary>
+    private void PrepareApiKey(AppSettings settings)
+    {
+        var key = (settings.ApiKey ?? string.Empty).Trim();
+        if (_protector is not null)
+        {
+            settings.ApiKeyProtected = key.Length > 0 ? _protector.Protect(key) : string.Empty;
+            settings.PlainApiKey = null;
+        }
+        else
+        {
+            settings.ApiKeyProtected = string.Empty;
+            settings.PlainApiKey = key;
+        }
+    }
+
+    private void TryRewrite(AppSettings settings)
+    {
+        try
+        {
+            Save(settings);
+        }
+        catch (IOException)
+        {
+            // Not migrated this time; the next save or start tries again.
         }
     }
 
