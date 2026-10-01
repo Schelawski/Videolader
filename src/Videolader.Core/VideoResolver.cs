@@ -5,7 +5,7 @@ namespace Videolader.Core;
 /// titles. With an API key the YouTube Data API is used (fast, exact); without one, yt-dlp lists
 /// playlists and oEmbed provides the titles of single videos. Videos occurring twice are listed once.
 /// </summary>
-public sealed class VideoResolver(HttpClient http, YtDlpClient? ytDlp, string? apiKey, string? cookiesBrowser, IProgress<string> log)
+public sealed class VideoResolver(HttpClient http, YtDlpClient? ytDlp, string? apiKey, string? cookiesBrowser, IProgress<string> log, string? contentLanguage = null)
 {
     private const int MaxParallelLookups = 4;
 
@@ -95,7 +95,7 @@ public sealed class VideoResolver(HttpClient http, YtDlpClient? ytDlp, string? a
 
         try
         {
-            return await ytDlp.ListAsync(item.Url, cookiesBrowser, ct).ConfigureAwait(false);
+            return await ytDlp.ListAsync(item.Url, cookiesBrowser, contentLanguage, ct).ConfigureAwait(false);
         }
         catch (YtDlpException ex)
         {

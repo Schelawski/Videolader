@@ -45,8 +45,21 @@ public class YtDlpTests
         Assert.Equal("firefox", args[args.ToList().IndexOf("--cookies-from-browser") + 1]);
     }
 
+    [Fact]
+    public void Content_language_is_passed_to_list_and_download_only_when_set()
+    {
+        var list = YtDlpCommandLine.BuildList("https://www.youtube.com/playlist?list=PLx", null, "ru");
+        Assert.Equal("youtube:lang=ru", list[list.ToList().IndexOf("--extractor-args") + 1]);
+
+        var download = YtDlpCommandLine.BuildDownload(Options() with { ContentLanguage = "ru" });
+        Assert.Equal("youtube:lang=ru", download[download.ToList().IndexOf("--extractor-args") + 1]);
+
+        Assert.DoesNotContain("--extractor-args", YtDlpCommandLine.BuildList("https://www.youtube.com/playlist?list=PLx", null));
+        Assert.DoesNotContain("--extractor-args", YtDlpCommandLine.BuildDownload(Options()));
+    }
+
     [Theory]
-    [InlineData(VideoQuality.Best, "res,vcodec:h264,acodec:m4a")]
+    [InlineData(VideoQuality.Best,"res,vcodec:h264,acodec:m4a")]
     [InlineData(VideoQuality.Max720, "res:720,vcodec:h264,acodec:m4a")]
     public void Quality_selects_format_sorting(VideoQuality quality, string sort)
     {

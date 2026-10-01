@@ -74,8 +74,9 @@ internal sealed class MainForm : Form
 
         Text = AppTitle;
         StartPosition = FormStartPosition.CenterScreen;
-        Size = new Size(1180, 860);
-        MinimumSize = new Size(920, 720);
+        MinimumSize = new Size(920, 840);
+        var area = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1280, 1000);
+        Size = new Size(Math.Min(1180, area.Width), Math.Min(920, area.Height));
 
         BuildLayout();
         LoadSettingsIntoControls();
@@ -105,6 +106,8 @@ internal sealed class MainForm : Form
     private void BuildLayout()
     {
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(10) };
+        // Fixed to the window width: content wraps instead of widening the column and being cut off.
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -124,13 +127,14 @@ internal sealed class MainForm : Form
         var table = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, AutoSize = true };
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        table.RowStyles.Add(new RowStyle(SizeType.Absolute, 96));
+        table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
         _txtInput.Multiline = true;
         _txtInput.AcceptsReturn = true;
         _txtInput.ScrollBars = ScrollBars.Vertical;
         _txtInput.Dock = DockStyle.Fill;
+        _txtInput.MinimumSize = new Size(0, 72);
         _txtInput.Font = UiStyle.CreateMonospaceFont(9.5f);
         _txtInput.PlaceholderText = "https://www.youtube.com/playlist?list=PL…\r\nhttps://youtu.be/dQw4w9WgXcQ\r\ndQw4w9WgXcQ";
 
@@ -144,7 +148,7 @@ internal sealed class MainForm : Form
         table.Controls.Add(_txtInput, 0, 0);
         table.Controls.Add(buttons, 1, 0);
         table.Controls.Add(UiStyle.CreateHint(
-            "Ein Eintrag pro Zeile: Video-Links, Video-IDs, Playlist-Links, Playlist-IDs (PL…) oder Kanal-Links. Strg+Enter lädt die Liste."), 0, 1);
+            "Ein Eintrag pro Zeile: Video-, Playlist- oder Kanal-Links bzw. IDs. Strg+Enter lädt die Liste."), 0, 1);
         table.SetColumnSpan(table.GetControlFromPosition(0, 1)!, 2);
 
         group.Controls.Add(table);
@@ -180,20 +184,20 @@ internal sealed class MainForm : Form
         ]);
 
         AddRow(table, "Zielordner:", folderRow);
-        AddRow(table, "Qualität:", Flow(
+        AddRow(table, "Qualität:", WithHint(Flow(
             _cmbQuality,
-            UiStyle.CreateLabel("Cookies aus Browser:"), _cmbCookies,
-            UiStyle.CreateHint("nur nötig, wenn YouTube eine Anmeldung verlangt")));
-        AddRow(table, "Untertitel:", Flow(
+            UiStyle.CreateLabel("Cookies aus Browser:"), _cmbCookies),
+            "Cookies nur nötig, wenn YouTube eine Anmeldung verlangt."));
+        AddRow(table, "Untertitel:", WithHint(Flow(
             _chkSubtitles,
-            UiStyle.CreateLabel("Sprachen:"), _txtLanguages,
-            UiStyle.CreateHint("z. B. ru,de,en – gespeichert als <ID>.<Sprache>.json (Whisper-Format) und .srt")));
+            UiStyle.CreateLabel("Sprachen:"), _txtLanguages),
+            "z. B. ru,de,en – die erste Sprache gilt auch für die Titel in der Liste."));
         AddRow(table, "Optionen:", Flow(
             _chkSkip,
             UiStyle.CreateLabel("Pause zwischen Downloads:"), _numPause, UiStyle.CreateLabel("s")));
-        AddRow(table, "YouTube-API-Key:", Flow(
-            _txtApiKey, _chkShowKey,
-            UiStyle.CreateHint("optional – lädt Playlists und Titel schneller, für den Download nicht nötig")));
+        AddRow(table, "YouTube-API-Key:", WithHint(Flow(
+            _txtApiKey, _chkShowKey),
+            "Optional – lädt Playlists und Titel schneller, für den Download nicht nötig."));
         AddRow(table, "Werkzeuge:", Flow(_lblTools, _btnTools));
 
         group.Controls.Add(table);
@@ -412,7 +416,8 @@ internal sealed class MainForm : Form
 
             var ytDlp = _tools.YtDlp is null ? null : new YtDlpClient(_tools);
             var log = new Progress<string>(_log.AppendMessage);
-            var resolver = new VideoResolver(Http, ytDlp, _settings.ApiKey, _settings.CookiesBrowser, log);
+            var resolver = new VideoResolver(Http, ytDlp, _settings.ApiKey, _settings.CookiesBrowser, log,
+                SubtitleLanguageList.Split(_settings.SubtitleLanguages).FirstOrDefault());
             var entries = await resolver.ResolveAsync(parsed.Items, ct);
 
             FillGrid(entries);
@@ -1037,11 +1042,22 @@ internal sealed class MainForm : Form
         return panel;
     }
 
+    /// <summary>The control line with a hint below it (instead of beside it, where it would be cut off in narrow windows).</summary>
+    private static TableLayoutPanel WithHint(Control line, string hint)
+    {
+        var panel = new TableLayoutPanel { AutoSize = true, ColumnCount = 1, RowCount = 2, Dock = DockStyle.Fill, Margin = Padding.Empty };
+        panel.Controls.Add(line, 0, 0);
+        panel.Controls.Add(UiStyle.CreateHint(hint), 0, 1);
+        return panel;
+    }
+
     private static void AddRow(TableLayoutPanel table, string label, Control content)
     {
         var row = table.RowCount++;
         table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        table.Controls.Add(UiStyle.CreateLabel(label), 0, row);
+        var caption = UiStyle.CreateLabel(label);
+        caption.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+        table.Controls.Add(caption, 0, row);
         table.Controls.Add(content, 1, row);
     }
 

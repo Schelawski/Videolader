@@ -11,7 +11,8 @@ public sealed record DownloadOptions(
     VideoQuality Quality,
     bool Subtitles,
     IReadOnlyList<string> SubtitleLanguages,
-    string? CookiesBrowser);
+    string? CookiesBrowser,
+    string? ContentLanguage = null);
 
 /// <summary>Builds yt-dlp command lines. Arguments are passed as a list, so no quoting is needed.</summary>
 public static class YtDlpCommandLine
@@ -63,6 +64,7 @@ public static class YtDlpCommandLine
         }
 
         AddCookies(args, options.CookiesBrowser);
+        AddContentLanguage(args, options.ContentLanguage);
 
         // "--" so an ID starting with "-" is not read as an option.
         args.Add("--");
@@ -71,13 +73,26 @@ public static class YtDlpCommandLine
     }
 
     /// <summary>Lists a playlist or channel tab without downloading anything (one JSON document on stdout).</summary>
-    public static IReadOnlyList<string> BuildList(string url, string? cookiesBrowser)
+    public static IReadOnlyList<string> BuildList(string url, string? cookiesBrowser, string? contentLanguage = null)
     {
         var args = new List<string>(CommonArguments) { "--flat-playlist", "-J", "--no-warnings" };
         AddCookies(args, cookiesBrowser);
+        AddContentLanguage(args, contentLanguage);
         args.Add("--");
         args.Add(url);
         return args;
+    }
+
+    /// <summary>
+    /// Without this YouTube answers in English and shows machine-translated titles instead of the original ones.
+    /// </summary>
+    private static void AddContentLanguage(List<string> args, string? language)
+    {
+        if (!string.IsNullOrWhiteSpace(language))
+        {
+            args.Add("--extractor-args");
+            args.Add("youtube:lang=" + language.Trim());
+        }
     }
 
     private static void AddCookies(List<string> args, string? cookiesBrowser)

@@ -60,7 +60,8 @@ public sealed class DownloadJob
             settings.Quality,
             settings.DownloadSubtitles,
             SubtitleLanguageList.Split(settings.SubtitleLanguages),
-            settings.CookiesBrowser);
+            settings.CookiesBrowser,
+            SubtitleLanguageList.Split(settings.SubtitleLanguages).FirstOrDefault());
 
         string? lastError = null;
         var mediaStream = 0;

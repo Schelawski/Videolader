@@ -33,10 +33,10 @@ public sealed class YtDlpClient
         ProcessRunner.RunAsync(_ytDlp, arguments, onLine, _tools.CreateEnvironment(), ct);
 
     /// <summary>Lists the videos of a playlist or channel tab without downloading.</summary>
-    public async Task<VideoList> ListAsync(string url, string? cookiesBrowser, CancellationToken ct = default)
+    public async Task<VideoList> ListAsync(string url, string? cookiesBrowser, string? contentLanguage = null, CancellationToken ct = default)
     {
         var (exitCode, stdout, stderr) = await ProcessRunner.CaptureAsync(
-            _ytDlp, YtDlpCommandLine.BuildList(url, cookiesBrowser), _tools.CreateEnvironment(), ct).ConfigureAwait(false);
+            _ytDlp, YtDlpCommandLine.BuildList(url, cookiesBrowser, contentLanguage),_tools.CreateEnvironment(), ct).ConfigureAwait(false);
 
         if (exitCode != 0 || string.IsNullOrWhiteSpace(stdout))
         {
