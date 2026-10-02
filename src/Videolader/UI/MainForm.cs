@@ -39,6 +39,7 @@ internal sealed class MainForm : Form
     private readonly TextBox _txtLanguages = new() { Width = 110 };
     private readonly CheckBox _chkSkip = new() { Text = "Bereits heruntergeladene überspringen", AutoSize = true, Margin = new Padding(3, 5, 18, 3) };
     private readonly NumericUpDown _numPause = new() { Width = 60, Minimum = 0, Maximum = AppSettings.MaxPauseSeconds };
+    private readonly NumericUpDown _numMaxVideos = new() { Width = 70, Minimum = 0, Maximum = AppSettings.MaxVideosPerRunLimit };
     private readonly TextBox _txtApiKey = new() { Width = 330, UseSystemPasswordChar = true };
     private readonly CheckBox _chkShowKey = new() { Text = "anzeigen", AutoSize = true, Margin = new Padding(6, 5, 12, 3) };
     private readonly Label _lblTools = UiStyle.CreateLabel(string.Empty);
@@ -74,7 +75,7 @@ internal sealed class MainForm : Form
 
         Text = AppTitle;
         StartPosition = FormStartPosition.CenterScreen;
-        MinimumSize = new Size(920, 840);
+        MinimumSize = new Size(920, 880);
         var area = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1280, 1000);
         Size = new Size(Math.Min(1180, area.Width), Math.Min(920, area.Height));
 
@@ -195,6 +196,9 @@ internal sealed class MainForm : Form
         AddRow(table, "Optionen:", Flow(
             _chkSkip,
             UiStyle.CreateLabel("Pause zwischen Downloads:"), _numPause, UiStyle.CreateLabel("s")));
+        AddRow(table, "Limit:", Flow(
+            UiStyle.CreateLabel("Höchstens"), _numMaxVideos, UiStyle.CreateLabel("Videos pro Lauf"),
+            UiStyle.CreateHint("(0 = alle markierten)")));
         AddRow(table, "YouTube-API-Key:", WithHint(Flow(
             _txtApiKey, _chkShowKey),
             "Optional – lädt Playlists und Titel schneller, für den Download nicht nötig."));
@@ -512,6 +516,7 @@ internal sealed class MainForm : Form
             SetStatus(row, RowStatus.Waiting, "Wartet");
 
         int done = 0, failed = 0, skipped = 0;
+        var limitReached = false;
         await RunBusyAsync("Download läuft…", async ct =>
         {
             var library = VideoLibrary.Open(_settings.OutputFolder);
@@ -527,6 +532,12 @@ internal sealed class MainForm : Form
                     SetChecked(row, false);
                     skipped++;
                     continue;
+                }
+
+                if (_settings.MaxVideosPerRun > 0 && done + failed >= _settings.MaxVideosPerRun)
+                {
+                    limitReached = true;
+                    break;
                 }
 
                 if (needsPause && _settings.PauseSeconds > 0)
@@ -586,6 +597,12 @@ internal sealed class MainForm : Form
             SetStatus(row, RowStatus.New, "Neu");
 
         _log.AppendMessage($"Fertig: {done} heruntergeladen, {failed} Fehler, {skipped} übersprungen.");
+        if (limitReached)
+        {
+            var remaining = targets.Count(r => r.Status == RowStatus.New);
+            _log.AppendMessage($"Limit von {_settings.MaxVideosPerRun} Videos erreicht. Noch {remaining} markiert – " +
+                               "zum Weitermachen erneut auf „Herunterladen“ klicken.");
+        }
         UpdateCount();
     }
 
@@ -770,7 +787,7 @@ internal sealed class MainForm : Form
         foreach (var control in new Control[]
                  {
                      _txtInput, _btnLoad, _btnClearInput, _txtFolder, _btnBrowse, _cmbQuality, _cmbCookies,
-                     _chkSubtitles, _chkSkip, _numPause, _txtApiKey, _btnTools, _btnAll, _btnNone, _btnOnlyNew, _btnDownload,
+                     _chkSubtitles, _chkSkip, _numPause, _numMaxVideos, _txtApiKey, _btnTools, _btnAll, _btnNone, _btnOnlyNew, _btnDownload,
                  })
         {
             control.Enabled = !busy;
@@ -797,6 +814,7 @@ internal sealed class MainForm : Form
         _txtLanguages.Text = _settings.SubtitleLanguages;
         _chkSkip.Checked = _settings.SkipExisting;
         _numPause.Value = _settings.PauseSeconds;
+        _numMaxVideos.Value = _settings.MaxVideosPerRun;
         _txtApiKey.Text = _settings.ApiKey;
     }
 
@@ -810,6 +828,7 @@ internal sealed class MainForm : Form
         _settings.SubtitleLanguages = _txtLanguages.Text;
         _settings.SkipExisting = _chkSkip.Checked;
         _settings.PauseSeconds = (int)_numPause.Value;
+        _settings.MaxVideosPerRun = (int)_numMaxVideos.Value;
         _settings.ApiKey = _txtApiKey.Text;
         _settings.Normalize();
         _txtLanguages.Text = _settings.SubtitleLanguages;

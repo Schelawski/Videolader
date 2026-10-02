@@ -183,6 +183,20 @@ public class SettingsStoreTests
         Assert.Equal(AppSettings.MaxPauseSeconds, loaded.PauseSeconds);
     }
 
+    [Fact]
+    public void Max_videos_per_run_is_saved_and_clamped()
+    {
+        using var primary = new TempFolder();
+        using var fallback = new TempFolder();
+        var store = new SettingsStore(primary.Path, fallback.Path);
+
+        store.Save(new AppSettings { MaxVideosPerRun = 50 });
+        Assert.Equal(50, store.Load().MaxVideosPerRun);
+
+        store.Save(new AppSettings { MaxVideosPerRun = -5 });
+        Assert.Equal(0, store.Load().MaxVideosPerRun);
+    }
+
     /// <summary>Reversible stand-in for DPAPI; "other-user:" values cannot be decrypted.</summary>
     private sealed class FakeProtector : ISecretProtector
     {

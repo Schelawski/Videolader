@@ -44,6 +44,9 @@ public sealed class AppSettings
     /// <summary>Pause between two downloads in seconds (protects against YouTube rate limits).</summary>
     public int PauseSeconds { get; set; } = 3;
 
+    /// <summary>Stop after this many download attempts per run (0 = no limit). Skipped videos do not count.</summary>
+    public int MaxVideosPerRun { get; set; }
+
     /// <summary>Last content of the input box.</summary>
     public string LastInput { get; set; } = string.Empty;
 
@@ -51,6 +54,8 @@ public sealed class AppSettings
     public string LastToolUpdate { get; set; } = string.Empty;
 
     public const int MaxPauseSeconds = 600;
+
+    public const int MaxVideosPerRunLimit = 100_000;
 
     /// <summary>Repairs values that are missing or out of range (e.g. from an edited file).</summary>
     public void Normalize()
@@ -64,6 +69,7 @@ public sealed class AppSettings
         if (!Enum.IsDefined(Quality))
             Quality = VideoQuality.Max1080;
         PauseSeconds = Math.Clamp(PauseSeconds, 0, MaxPauseSeconds);
+        MaxVideosPerRun = Math.Clamp(MaxVideosPerRun, 0, MaxVideosPerRunLimit);
         LastInput ??= string.Empty;
         LastToolUpdate ??= string.Empty;
     }
