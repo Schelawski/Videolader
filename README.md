@@ -163,9 +163,11 @@ src/Videolader        WinForms-Oberfläche (MainForm)
 tests/Videolader.Tests  xUnit-Tests
 ```
 
-Teildateien und Rohdaten landen während des Downloads im versteckten Unterordner
-`.videolader-temp` und werden danach aufgeräumt. Abgebrochene Downloads setzen beim nächsten
-Versuch dort fort.
+Teildateien und Rohdaten landen während des Downloads immer auf der lokalen Platte in
+`%LOCALAPPDATA%\Videolader\temp` und werden danach aufgeräumt, auch wenn der Zielordner ein
+Netzlaufwerk ist (dort scheitert yt-dlp schon beim Schreiben kleiner Dateien mit „Errno 22“).
+Abgebrochene Downloads setzen beim nächsten Versuch dort fort. Ein `.videolader-temp` in einem
+Zielordner stammt aus einer älteren Version und kann gelöscht werden.
 
 ## Rechtliches
 

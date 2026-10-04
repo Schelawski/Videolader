@@ -79,7 +79,8 @@ public class DownloadJobTests
                 File.WriteAllText(Path.Combine(home, Id + ".mp4"), "video");
             return Task.FromResult(exitCode);
         },
-        () => Now);
+        () => Now,
+        Path.Combine(Path.GetTempPath(), "videolader-test-temp-" + Guid.NewGuid().ToString("N")));
 
     [Fact]
     public async Task Writes_video_info_and_subtitles_next_to_each_other()
@@ -98,7 +99,10 @@ public class DownloadJobTests
         Assert.True(File.Exists(Path.Combine(folder.Path, Id + ".ru.srt")));
         Assert.True(File.Exists(Path.Combine(folder.Path, Id + ".en.json")));
         Assert.True(library.IsInArchive(Id));
-        Assert.False(Directory.Exists(Path.Combine(folder.Path, DownloadJob.TempFolderName)));
+        // Raw files stay out of the output folder (it may be a network share); the temp folder is local.
+        string[] expected = [Id + ".en.json", Id + ".en.srt", Id + ".info.json", Id + ".mp4", Id + ".ru.json", Id + ".ru.srt", "videolader-archiv.txt"];
+        var actual = Directory.GetFileSystemEntries(folder.Path).Select(p => Path.GetFileName(p)!).ToArray();
+        Assert.Equal(expected.Order().ToArray(), actual.Order().ToArray());
         Assert.Contains(progress.Items, u => u.Percent == 50);
         Assert.Contains(progress.Items, u => u.Phase == "Zusammenführen…");
 

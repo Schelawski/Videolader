@@ -21,24 +21,30 @@ public sealed record DownloadResult(bool Success, string? Error, string? MediaFi
 /// </summary>
 public sealed class DownloadJob
 {
-    /// <summary>Folder inside the output folder for partial and raw files.</summary>
-    public const string TempFolderName = ".videolader-temp";
+    /// <summary>
+    /// Folder for partial and raw files: always on the local disk (<c>%LOCALAPPDATA%\Videolader\temp</c>),
+    /// even if the output folder is a network share. yt-dlp fails to write files there ("Errno 22").
+    /// </summary>
+    public static string DefaultTempFolder { get; } =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Videolader", "temp");
 
     /// <summary>Runs yt-dlp with the given arguments and reports every output line.</summary>
     public delegate Task<int> YtDlpRunner(IReadOnlyList<string> arguments, Action<string> onLine, CancellationToken ct);
 
     private readonly YtDlpRunner _runYtDlp;
     private readonly Func<DateTimeOffset> _clock;
+    private readonly string _tempFolder;
 
     public DownloadJob(YtDlpClient ytDlp)
         : this(ytDlp.RunAsync, () => DateTimeOffset.Now)
     {
     }
 
-    public DownloadJob(YtDlpRunner runYtDlp, Func<DateTimeOffset> clock)
+    public DownloadJob(YtDlpRunner runYtDlp, Func<DateTimeOffset> clock, string? tempFolder = null)
     {
         _runYtDlp = runYtDlp;
         _clock = clock;
+        _tempFolder = tempFolder ?? DefaultTempFolder;
     }
 
     public async Task<DownloadResult> RunAsync(
@@ -49,9 +55,9 @@ public sealed class DownloadJob
         CancellationToken ct)
     {
         var outputFolder = library.Folder;
-        var tempFolder = Path.Combine(outputFolder, TempFolderName);
+        var tempFolder = _tempFolder;
         Directory.CreateDirectory(outputFolder);
-        CreateHiddenFolder(tempFolder);
+        Directory.CreateDirectory(tempFolder);
 
         var options = new DownloadOptions(
             entry.Id,
@@ -209,12 +215,5 @@ public sealed class DownloadJob
         {
             // Temp files are harmless; they are cleaned up next time.
         }
-    }
-
-    private static void CreateHiddenFolder(string path)
-    {
-        var info = Directory.CreateDirectory(path);
-        if (OperatingSystem.IsWindows())
-            info.Attributes |= FileAttributes.Hidden;
     }
 }
