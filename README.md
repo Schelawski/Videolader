@@ -66,7 +66,9 @@ Zeile genau einmal vorkommt.
 
 1. Links oder IDs in das obere Feld einfügen, eine pro Zeile. Erkannt werden:
    Video-Links (`watch?v=`, `youtu.be/`, `shorts/`, `live/`), Video-IDs, Playlist-Links und
-   Playlist-IDs (`PL…`) sowie Kanal-Links (`/@name`, dann wird der Tab „Videos“ geladen).
+   Playlist-IDs (`PL…`) sowie Kanäle (Link, `@name` oder Kanal-ID `UC…`, dann wird der Tab
+   „Videos“ geladen; Shorts und Livestreams sind eigene Tabs und müssen als eigene Zeile
+   `…/shorts` bzw. `…/streams` angegeben werden).
 2. **Liste laden** (oder Strg+Enter). Playlists werden aufgelöst, doppelte Videos zusammengefasst.
    Jedes Video bekommt einen Status: **Neu**, **Bereits vorhanden** oder **Nicht verfügbar**
    (privat oder gelöscht).
@@ -89,10 +91,36 @@ Zeile aus der Archivdatei.
 | Cookies aus Browser | Nur nötig, wenn YouTube „Sign in to confirm you're not a bot“ meldet. Firefox funktioniert am zuverlässigsten, denn Chrome/Edge verschlüsseln ihre Cookies unter Windows so, dass yt-dlp sie oft nicht lesen kann. |
 | Untertitel / Sprachen | z. B. `ru` oder `ru,de,en`. Hochgeladene Untertitel haben Vorrang vor automatischen. Achtung: Bei automatischen Untertiteln liefert YouTube für fremde Sprachen maschinelle Übersetzungen. |
 | Pause | Sekunden zwischen zwei Downloads, schützt vor YouTubes Drosselung (HTTP 429). |
+| Limit | Höchstens so viele Videos pro Lauf (0 = alle). Bei langen Listen z. B. 50 und beim nächsten Mal einfach weitermachen: Fertige Videos stehen im Archiv und werden übersprungen. |
 | YouTube-API-Key | Optional. Damit werden Playlists und Titel über die offizielle API gelesen (schnell, 1 Quota-Einheit pro 50 Videos). Ohne Key übernimmt das yt-dlp bzw. YouTubes oEmbed-Schnittstelle. **Zum Herunterladen wird der Key nicht gebraucht**, weil die API keine Videodateien liefert. |
 
 Die Einstellungen stehen in `Videolader.settings.json` neben der exe (oder in
-`%APPDATA%\Videolader`, wenn der Ordner schreibgeschützt ist). Der API-Key steht dort im Klartext.
+`%APPDATA%\Videolader`, wenn der Ordner schreibgeschützt ist). Der API-Key wird dort mit Windows
+DPAPI für dein Benutzerkonto verschlüsselt; auf einem anderen Konto oder Rechner muss er neu
+eingetragen werden.
+
+## Kommandozeile
+
+Mit Argumenten arbeitet `Videolader.exe` ohne Fenster, ohne Argumente öffnet sich die Oberfläche.
+
+```powershell
+Videolader.exe setup                                   # yt-dlp, ffmpeg, Deno einrichten (einmalig)
+Videolader.exe dQw4w9WgXcQ --out D:\Videos             # ein Video
+Videolader.exe PLxxxxxxxxxxx --limit 50 --pause 5      # eine Playlist, höchstens 50 pro Lauf
+Videolader.exe @KanalName --list                       # Kanal nur auflisten
+Videolader.exe --help                                  # alle Optionen
+```
+
+Nicht angegebene Optionen kommen aus den gespeicherten Einstellungen. Die Kommandozeile ändert
+diese Einstellungen nicht. Mit `--json` schreibt Videolader pro Video eine JSON-Zeile auf stdout
+(`id`, `status`, `title`, `file`, `error`), alle Meldungen gehen dann nach stderr. Exitcodes:
+0 = in Ordnung, 1 = mindestens ein Fehler, 2 = falsche Eingabe, 3 = Werkzeuge fehlen,
+130 = abgebrochen (Strg+C).
+
+Die exe ist eine Windows-Anwendung ohne eigene Konsole. Sie hängt sich an die Konsole an, aus der
+sie gestartet wurde, aber die Eingabeaufforderung kehrt sofort zurück. Zum Warten auf das Ende
+(und für den Exitcode): `start /wait Videolader.exe …` in cmd bzw. `Videolader.exe … | Out-Host`
+in PowerShell. Bei umgeleiteter Ausgabe (`> datei.txt`, Pipe) wird die Umleitung verwendet.
 
 ## Werkzeuge
 

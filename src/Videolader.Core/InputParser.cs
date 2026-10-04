@@ -50,6 +50,13 @@ public static partial class InputParser
     [GeneratedRegex("^(PL|UU|OL|FL|UL|PU)[A-Za-z0-9_-]{10,}$")]
     private static partial Regex PlaylistIdRegex();
 
+    // Channel ID ("UC" + 22 characters) and handle ("@Name") typed without a link.
+    [GeneratedRegex("^UC[A-Za-z0-9_-]{22}$")]
+    private static partial Regex ChannelIdRegex();
+
+    [GeneratedRegex(@"^@[A-Za-z0-9._-]{3,30}$")]
+    private static partial Regex HandleRegex();
+
     private static readonly string[] VideoPathPrefixes = ["shorts", "live", "embed", "v", "e"];
     private static readonly string[] ChannelPathPrefixes = ["channel", "c", "user"];
 
@@ -89,6 +96,10 @@ public static partial class InputParser
             return new InputItem(InputKind.Video, text, token);
         if (IsPlaylistId(text))
             return new InputItem(InputKind.Playlist, text, token);
+        if (ChannelIdRegex().IsMatch(text))
+            return new InputItem(InputKind.Url, $"https://www.youtube.com/channel/{text}/videos", token);
+        if (HandleRegex().IsMatch(text))
+            return new InputItem(InputKind.Url, $"https://www.youtube.com/{text}/videos", token);
 
         return ParseUrl(text, token);
     }
