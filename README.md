@@ -141,7 +141,10 @@ in PowerShell. Bei umgeleiteter Ausgabe (`> datei.txt`, Pipe) wird die Umleitung
 ## Werkzeuge
 
 Beim ersten Start fehlen drei Programme. **Einstellungen → Werkzeuge → Einrichten…** lädt sie von den offiziellen
-GitHub-Releases in den Ordner `tools` neben der exe (oder nach `%LOCALAPPDATA%\Videolader\tools`):
+GitHub-Releases in den Ordner `tools` neben der exe (oder nach `%LOCALAPPDATA%\Videolader\tools`). Jeder
+Download wird vorher mit der SHA-256-Prüfsumme verglichen, die das Projekt im selben Release
+veröffentlicht (`SHA2-256SUMS`, `checksums.sha256` bzw. `.sha256sum`); passt sie nicht, wird nichts
+eingerichtet:
 
 | Programm | Wofür |
 |---|---|

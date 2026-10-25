@@ -455,6 +455,16 @@ public static class UiText
         $"Playlist {playlist} kann nicht geladen werden: yt-dlp fehlt (oder API-Key eintragen).",
         $"Плейлист {playlist} не удаётся загрузить: нет yt-dlp (или укажите ключ API).");
 
+    public static string ChecksumMismatch(string tool) => L(
+        $"The download of {tool} does not match the checksum published by the project and was deleted. Please try again later.",
+        $"Der Download von {tool} passt nicht zur Prüfsumme, die das Projekt veröffentlicht hat, und wurde gelöscht. Bitte später erneut versuchen.",
+        $"Загрузка {tool} не совпадает с контрольной суммой, опубликованной проектом, и была удалена. Попробуйте позже ещё раз.");
+
+    public static string ChecksumMissing(string tool) => L(
+        $"No published checksum was found for {tool}, so nothing was installed.",
+        $"Für {tool} wurde keine veröffentlichte Prüfsumme gefunden, deshalb wurde nichts eingerichtet.",
+        $"Для {tool} не найдена опубликованная контрольная сумма, поэтому ничего не установлено.");
+
     public static string EmptyFile => L("Empty file.", "Leere Datei.", "Пустой файл.");
 
     public static string FileNotInArchive(string file) => L(

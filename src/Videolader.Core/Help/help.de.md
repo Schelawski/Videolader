@@ -228,4 +228,4 @@ Videolader baut auf der Arbeit anderer auf. Herzlichen Dank an:
 - **FFmpeg** – fügt Bild und Ton zusammen (GPL, Build des yt-dlp-Teams: `github.com/yt-dlp/FFmpeg-Builds`).
 - **Deno** – JavaScript-Laufzeit für YouTubes Prüfung (MIT-Lizenz, `github.com/denoland/deno`).
 
-Diese Werkzeuge liefert Videolader nicht mit. Beim Einrichten werden sie direkt von den genannten offiziellen Seiten geladen, ihre Lizenzen findest du dort. Das Beispiel-Video `aqz-KE-bpKQ` in dieser Hilfe ist „Big Buck Bunny“ der Blender Foundation (Creative Commons CC BY 3.0).
+Diese Werkzeuge liefert Videolader nicht mit. Beim Einrichten werden sie direkt von den genannten offiziellen Seiten geladen und mit der Prüfsumme (SHA-256) verglichen, die das jeweilige Projekt dort veröffentlicht. Passt sie nicht, wird nichts eingerichtet. Die Lizenzen findest du ebenfalls dort. Das Beispiel-Video `aqz-KE-bpKQ` in dieser Hilfe ist „Big Buck Bunny“ der Blender Foundation (Creative Commons CC BY 3.0).

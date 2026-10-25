@@ -218,7 +218,7 @@ public sealed class CliRunner(
                 await installer.InstallDenoAsync(toolsDirectory, progress, ct).ConfigureAwait(false);
             }
         }
-        catch (Exception ex) when (ex is HttpRequestException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is HttpRequestException or IOException or UnauthorizedAccessException or InvalidDataException)
         {
             stderr.WriteLine(UiText.CliSetupFailed(ex.Message));
             return ExitFailed;

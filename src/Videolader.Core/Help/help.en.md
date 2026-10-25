@@ -228,4 +228,4 @@ Videolader builds on the work of others. Many thanks to:
 - **FFmpeg** – joins picture and sound (GPL, build by the yt-dlp team: `github.com/yt-dlp/FFmpeg-Builds`).
 - **Deno** – JavaScript runtime for YouTube's check (MIT license, `github.com/denoland/deno`).
 
-Videolader does not ship these tools. When you set them up, they are downloaded directly from the official pages above, where you also find their licenses. The example video `aqz-KE-bpKQ` in this help is “Big Buck Bunny” by the Blender Foundation (Creative Commons CC BY 3.0).
+Videolader does not ship these tools. When you set them up, they are downloaded directly from the official pages above and compared with the checksum (SHA-256) each project publishes there. If it does not match, nothing is installed. You also find their licenses there. The example video `aqz-KE-bpKQ` in this help is “Big Buck Bunny” by the Blender Foundation (Creative Commons CC BY 3.0).
