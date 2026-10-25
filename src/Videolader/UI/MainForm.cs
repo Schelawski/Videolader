@@ -74,6 +74,10 @@ internal sealed class MainForm : Form
     // Actions
     private readonly Button _btnDownload = UiStyle.CreateButton(UiText.Download);
     private readonly Button _btnCancel = UiStyle.CreateButton(UiText.Cancel);
+    private readonly Button _btnHelp = UiStyle.CreateButton(UiText.HelpButton);
+
+    /// <summary>Help topic of the last tip in the log; F1 in the log or list opens it.</summary>
+    private string? _lastHelpTopic;
     private readonly ProgressBar _progress = new() { Width = 260, Height = 20, Margin = new Padding(12, 8, 6, 3) };
     private readonly Label _lblProgress = UiStyle.CreateHint(string.Empty);
 
@@ -181,6 +185,7 @@ internal sealed class MainForm : Form
         UiStyle.SetIcon(_btnOnlyNew, Glyph.Filter, DeviceDpi);
         UiStyle.SetIcon(_btnDownload, Glyph.Download, DeviceDpi);
         UiStyle.SetIcon(_btnCancel, Glyph.Cancel, DeviceDpi);
+        UiStyle.SetIcon(_btnHelp, Glyph.Help, DeviceDpi);
 
         var size = (int)Math.Round(16 * DeviceDpi / 96f);
         var images = new ImageList { ColorDepth = ColorDepth.Depth32Bit, ImageSize = new Size(size, size) };
@@ -252,9 +257,12 @@ internal sealed class MainForm : Form
             _cmbQuality.Items.Add(new Choice<VideoQuality>(quality, quality.GetDisplayName()));
 
         AddRow(table, UiText.OutputFolderLabel, folderRow);
-        AddRow(table, UiText.QualityLabel, Flow(_cmbQuality, _chkSkip));
-        AddRow(table, UiText.SubtitlesLabel, Flow(_chkSubtitles, UiStyle.CreateLabel(UiText.LanguagesLabel), _txtLanguages));
-        AddRow(table, UiText.PauseLabel, Flow(_numPause, UiStyle.CreateLabel(UiText.SecondsUnit), _chkRandomPause));
+        AddRow(table, UiText.QualityLabel, Flow(
+            _cmbQuality, Badge(HelpTopics.Quality, UiText.HelpTipQuality), _chkSkip, Badge(HelpTopics.Existing, UiText.HelpTipExisting)));
+        AddRow(table, UiText.SubtitlesLabel, Flow(
+            _chkSubtitles, UiStyle.CreateLabel(UiText.LanguagesLabel), _txtLanguages, Badge(HelpTopics.Quality, UiText.HelpTipQuality)));
+        AddRow(table, UiText.PauseLabel, Flow(
+            _numPause, UiStyle.CreateLabel(UiText.SecondsUnit), _chkRandomPause, Badge(HelpTopics.Pause, UiText.HelpTipPause)));
         AddRow(table, UiText.LimitLabel, Flow(_numMaxVideos, UiStyle.CreateLabel(UiText.VideosPerRun), UiStyle.CreateHint(UiText.LimitHint)));
 
         _tips.SetToolTip(_chkSkip, UiText.TipSkipExisting);
@@ -286,9 +294,9 @@ internal sealed class MainForm : Form
             _cmbUiLanguage.Items.Add(new Choice<UiLanguage>(language, UiLanguages.NativeName(language)));
 
         AddRow(table, UiText.UiLanguageLabel, WithHint(Flow(_cmbUiLanguage), UiText.UiLanguageHint));
-        AddRow(table, UiText.CookiesLabel, WithHint(Flow(_cmbCookies), UiText.CookiesHint));
-        AddRow(table, UiText.ApiKeyLabel, WithHint(Flow(_txtApiKey, _chkShowKey), UiText.ApiKeyHint));
-        AddRow(table, UiText.ToolsLabel, WithHint(Flow(_lblTools, _btnTools), UiText.ToolsHint(_toolsDirectory)));
+        AddRow(table, UiText.CookiesLabel, WithHint(Flow(_cmbCookies, Badge(HelpTopics.Cookies, UiText.HelpTipCookies)), UiText.CookiesHint));
+        AddRow(table, UiText.ApiKeyLabel, WithHint(Flow(_txtApiKey, _chkShowKey, Badge(HelpTopics.ApiKey, UiText.HelpTipApiKey)), UiText.ApiKeyHint));
+        AddRow(table, UiText.ToolsLabel, WithHint(Flow(_lblTools, _btnTools, Badge(HelpTopics.Tools, UiText.HelpTipTools)), UiText.ToolsHint(_toolsDirectory)));
         return table;
     }
 
@@ -320,15 +328,28 @@ internal sealed class MainForm : Form
         return _split;
     }
 
-    private FlowLayoutPanel BuildActionBar()
+    private TableLayoutPanel BuildActionBar()
     {
         UiStyle.MakePrimary(_btnDownload);
         _btnDownload.MinimumSize = new Size(150, 34);
         _btnCancel.MinimumSize = new Size(110, 34);
-        var bar = Flow(_btnDownload, _btnCancel, _progress, _lblProgress);
-        bar.Margin = new Padding(0, 8, 0, 0);
+        _btnHelp.MinimumSize = new Size(0, 34);
+        _tips.SetToolTip(_btnHelp, UiText.HelpButtonTooltip);
+
+        var bar = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, AutoSize = true, Margin = new Padding(0, 8, 0, 0) };
+        bar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        bar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        bar.Controls.Add(Flow(_btnDownload, _btnCancel, _progress, _lblProgress), 0, 0);
+        bar.Controls.Add(_btnHelp, 1, 0);
         return bar;
     }
+
+    /// <summary>Small "?" next to a setting: tooltip with a short explanation, click opens the help topic.</summary>
+    private HelpBadge Badge(string topicId, string tip) => new(topicId, tip, _tips)
+    {
+        Size = new Size(LogicalToDeviceUnits(16), LogicalToDeviceUnits(16)),
+        Margin = new Padding(4, LogicalToDeviceUnits(7), 4, 0),
+    };
 
     private void SetUpGrid()
     {
@@ -389,6 +410,7 @@ internal sealed class MainForm : Form
         _chkShowKey.CheckedChanged += (_, _) => _txtApiKey.UseSystemPasswordChar = !_chkShowKey.Checked;
         _btnTools.Click += async (_, _) => await SetUpToolsAsync();
         _btnToggleLog.Click += (_, _) => SetLogVisible(_split.Panel2Collapsed);
+        _btnHelp.Click += (_, _) => HelpForm.Open(this, HelpTopicForFocus());
         _cmbUiLanguage.SelectionChangeCommitted += (_, _) => SwitchUiLanguage();
 
         _btnAll.Click += (_, _) => SetChecked(_ => true);
@@ -461,6 +483,52 @@ internal sealed class MainForm : Form
         {
             await LogVersionAsync();
         }
+    }
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (keyData == Keys.F1)
+        {
+            HelpForm.Open(this, HelpTopicForFocus());
+            return true;
+        }
+
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    /// <summary>The help topic for the control that has the focus (F1), e.g. "Pause" in the pause box.</summary>
+    private string HelpTopicForFocus()
+    {
+        for (Control? control = ActiveControl; control is not null; control = (control as ContainerControl)?.ActiveControl)
+        {
+            if (control == _numPause || control == _chkRandomPause || control == _numMaxVideos)
+                return HelpTopics.Pause;
+            if (control == _cmbQuality || control == _chkSubtitles || control == _txtLanguages)
+                return HelpTopics.Quality;
+            if (control == _chkSkip || control == _txtFolder)
+                return HelpTopics.Existing;
+            if (control == _cmbCookies)
+                return HelpTopics.Cookies;
+            if (control == _txtApiKey || control == _chkShowKey)
+                return HelpTopics.ApiKey;
+            if (control == _btnTools)
+                return HelpTopics.Tools;
+            if ((control == _log || control == _grid) && _lastHelpTopic is not null)
+                return _lastHelpTopic;
+        }
+
+        return _tabs.SelectedTab == _tabSettings ? HelpTopics.Tools : HelpTopics.FirstSteps;
+    }
+
+    /// <summary>" → Help: “Cookies from browser” (F1)" after a tip, and F1 then opens that topic.</summary>
+    private string HelpReference(string error)
+    {
+        if (YtDlpOutput.GetHelpTopic(error) is not { } topicId)
+            return string.Empty;
+
+        _lastHelpTopic = topicId;
+        var title = HelpDocument.Load(UiLanguages.Code(UiText.Language)).Find(topicId)?.Title;
+        return title is null ? string.Empty : " " + UiText.SeeHelp(title);
     }
 
     /// <summary>Saves the choice and closes the window; Program reopens it in the new language.</summary>
@@ -690,7 +758,7 @@ internal sealed class MainForm : Form
                     SetStatus(row, RowStatus.Failed, UiText.StatusFailed(result.Error));
                     _log.AppendMessage($"✖ {row.Entry.Id}: {result.Error}");
                     if (result.Error is not null && YtDlpOutput.GetHint(result.Error) is { } hint)
-                        _log.AppendMessage("  " + UiText.Tip(hint));
+                        _log.AppendMessage("  " + UiText.Tip(hint) + HelpReference(result.Error));
 
                     // Every further video would fail the same way.
                     if (result.Error is not null && YtDlpOutput.IsCookieError(result.Error))

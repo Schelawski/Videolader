@@ -155,6 +155,46 @@ public static class UiText
         "Jede Pause wird zufällig um bis zu 50 % verlängert, damit kein gleichmäßiger Takt entsteht.",
         "Каждая пауза случайно удлиняется до 50 %, чтобы не было равномерного ритма.");
 
+    // ----- Help -----
+
+    public static string HelpButton => L("Help", "Hilfe", "Справка");
+    public static string HelpTitle => L("Videolader – Help", "Videolader – Hilfe", "Videolader – справка");
+    public static string HelpButtonTooltip => L("Open the help (F1)", "Hilfe öffnen (F1)", "Открыть справку (F1)");
+    public static string HelpClickForMore => L("Click the “?” to learn more.", "Klicke auf das „?“ für mehr.", "Нажмите «?», чтобы узнать больше.");
+
+    /// <summary>Added to a tip in the log: where the help explains it.</summary>
+    public static string SeeHelp(string topicTitle) => L($"→ Help: “{topicTitle}” (F1)", $"→ Hilfe: „{topicTitle}“ (F1)", $"→ Справка: «{topicTitle}» (F1)");
+
+    public static string HelpTipQuality => L(
+        "Up to 1080p is the default. “Audio only” saves just the sound. Subtitles are saved as Whisper JSON and SRT.",
+        "Bis 1080p ist der Standard. „Nur Audio“ speichert nur den Ton. Untertitel werden als Whisper-JSON und SRT gespeichert.",
+        "По умолчанию до 1080p. «Только аудио» сохраняет только звук. Субтитры сохраняются как Whisper JSON и SRT.");
+
+    public static string HelpTipExisting => L(
+        "Videos in the folder or in videolader-archiv.txt are never downloaded twice.",
+        "Videos im Zielordner oder in videolader-archiv.txt werden nie doppelt geladen.",
+        "Видео из папки или из videolader-archiv.txt никогда не скачиваются повторно.");
+
+    public static string HelpTipPause => L(
+        "From experience: with 30 s YouTube often blocks, from 45 s even 100 videos in a row usually work.",
+        "Erfahrung: Mit 30 s sperrt YouTube oft, ab 45 s laufen meist sogar 100 Videos am Stück durch.",
+        "Из опыта: при 30 с YouTube часто блокирует, от 45 с обычно проходят даже 100 видео подряд.");
+
+    public static string HelpTipCookies => L(
+        "Usually not needed. If YouTube asks you to sign in: use Firefox – Chrome, Edge and Brave lock their cookies.",
+        "Meist nicht nötig. Verlangt YouTube eine Anmeldung: Firefox nehmen – Chrome, Edge und Brave sperren ihre Cookies.",
+        "Обычно не нужны. Если YouTube требует вход: используйте Firefox – Chrome, Edge и Brave блокируют свои cookies.");
+
+    public static string HelpTipApiKey => L(
+        "Optional. How to create a free key and why downloading works without it.",
+        "Freiwillig. So legst du einen kostenlosen Key an, und warum das Herunterladen auch ohne geht.",
+        "Необязательно. Как получить бесплатный ключ и почему скачивание работает и без него.");
+
+    public static string HelpTipTools => L(
+        "yt-dlp, ffmpeg and Deno do the actual work. yt-dlp must stay up to date.",
+        "yt-dlp, ffmpeg und Deno erledigen die eigentliche Arbeit. yt-dlp muss aktuell bleiben.",
+        "yt-dlp, ffmpeg и Deno выполняют основную работу. yt-dlp нужно обновлять.");
+
     // ----- Settings tab -----
 
     public static string UiLanguageLabel => L("Language:", "Sprache:", "Язык:");
@@ -253,7 +293,7 @@ public static class UiText
     public static string ToolsMissingLog(string missing) => L(
         $"Missing: {missing}. Under “Settings”, click “Set up…” next to “Tools” – they are downloaded automatically.",
         $"Es fehlen: {missing}. Klicke unter „Einstellungen“ bei „Werkzeuge“ auf „Einrichten…“ – sie werden automatisch heruntergeladen.",
-        $"Не хватает: {missing}. В «Настройках» нажмите «Установить…» рядом с «Инструменты» – они скачаются автоматически.");
+        $"Не хватает: {missing}. На вкладке «Настройки» нажмите «Установить…» рядом с пунктом «Инструменты» – они скачаются автоматически.");
 
     public static string UpdatingYtDlp => L("Updating yt-dlp…", "yt-dlp wird aktualisiert…", "Обновление yt-dlp…");
 
@@ -284,7 +324,7 @@ public static class UiText
     public static string NeedYtDlpAndFfmpeg => L(
         "yt-dlp and ffmpeg are needed. Under “Settings”, click “Set up…” next to “Tools”.",
         "yt-dlp und ffmpeg werden benötigt. Klicke unter „Einstellungen“ bei „Werkzeuge“ auf „Einrichten…“.",
-        "Нужны yt-dlp и ffmpeg. В «Настройках» нажмите «Установить…» рядом с «Инструменты».");
+        "Нужны yt-dlp и ffmpeg. На вкладке «Настройки» нажмите «Установить…» рядом с пунктом «Инструменты».");
 
     public static string DenoMissingWarning => L(
         "Warning: Deno is missing – YouTube then often offers only limited formats.",
@@ -448,7 +488,7 @@ public static class UiText
         "signed in to YouTube (Firefox works, Chrome/Edge/Brave usually don't).",
         "YouTube verlangt eine Anmeldung. Wähle unter „Einstellungen“ bei „Cookies aus Browser“ einen Browser, in dem du " +
         "bei YouTube angemeldet bist (Firefox funktioniert, Chrome/Edge/Brave meist nicht).",
-        "YouTube требует вход. В «Настройках» выберите для «Cookies из браузера» браузер, в котором вы вошли в YouTube " +
+        "YouTube требует вход. На вкладке «Настройки» в поле «Cookies из браузера» выберите браузер, в котором вы вошли в YouTube " +
         "(Firefox работает, Chrome/Edge/Brave обычно нет).");
 
     public static string HintThrottled => L(

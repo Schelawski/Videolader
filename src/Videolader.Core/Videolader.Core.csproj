@@ -18,4 +18,10 @@
     <InternalsVisibleTo Include="Videolader.Tests" />
   </ItemGroup>
 
+  <!-- Help texts, one Markdown file per language (see HelpDocument.cs).
+       WithCulture="false": "help.de.md" is not a satellite resource for the culture "de". -->
+  <ItemGroup>
+    <EmbeddedResource Include="Help\help.*.md" LogicalName="Videolader.Help.%(Filename)%(Extension)" WithCulture="false" />
+  </ItemGroup>
+
 </Project>

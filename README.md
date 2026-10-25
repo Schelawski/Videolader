@@ -11,6 +11,11 @@ Oberfläche und Kommandozeile gibt es auf **Englisch, Deutsch und Russisch**. Be
 richtet sich die Sprache nach Windows (Deutsch bzw. Russisch, sonst Englisch); umschalten lässt sie
 sich unter **Einstellungen → Sprache**, auf der Kommandozeile mit `--lang en|de|ru`.
 
+Eine **Hilfe** in allen drei Sprachen öffnet sich mit dem Knopf „Hilfe“ unten rechts, mit F1 (passend
+zum Feld, in dem man gerade ist) oder über die kleinen „?“ neben den Einstellungen. Sie enthält auch
+die Erfahrungen aus der Praxis, etwa zur Pause und zu den Cookies. Die Texte stehen in
+`src/Videolader.Core/Help/help.{en,de,ru}.md`.
+
 ## Was pro Video entsteht
 
 ```

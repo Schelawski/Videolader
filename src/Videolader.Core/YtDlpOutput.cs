@@ -86,6 +86,22 @@ public static class YtDlpOutput
         return null;
     }
 
+    /// <summary>The help topic (<see cref="HelpTopics"/>) that explains a well-known error, or null.</summary>
+    public static string? GetHelpTopic(string error)
+    {
+        if (IsCookieError(error) || error.Contains("Sign in to confirm", StringComparison.OrdinalIgnoreCase))
+            return HelpTopics.Cookies;
+        if (error.Contains("HTTP Error 429", StringComparison.OrdinalIgnoreCase))
+            return HelpTopics.Pause;
+        if (error.Contains("Private video", StringComparison.OrdinalIgnoreCase))
+            return HelpTopics.Problems;
+        if (error.Contains("JavaScript runtime", StringComparison.OrdinalIgnoreCase) ||
+            error.Contains("n challenge", StringComparison.OrdinalIgnoreCase) ||
+            error.Contains("ffmpeg", StringComparison.OrdinalIgnoreCase))
+            return HelpTopics.Tools;
+        return null;
+    }
+
     /// <summary>
     /// The browser cookies could not be read (Chromium browsers on Windows lock and encrypt them).
     /// Every further download would fail the same way, so the run should stop.

@@ -14,7 +14,26 @@ internal static class UiStyle
     public static readonly Color DangerText = Color.FromArgb(153, 27, 27);
     public static readonly Color DisabledText = Color.FromArgb(156, 163, 175);
 
+    /// <summary>Background and text color of a small round badge.</summary>
+    public readonly record struct Badge(Color Back, Color Fore);
+
+    public static readonly Badge Info = new(Color.FromArgb(219, 234, 254), Color.FromArgb(30, 64, 175));
+
     public static Font CreateMonospaceFont(float size = 9f) => new("Consolas", size);
+
+    public static void FillRoundedRectangle(Graphics graphics, Color color, RectangleF bounds, float radius)
+    {
+        using var path = new System.Drawing.Drawing2D.GraphicsPath();
+        var diameter = Math.Min(radius * 2, Math.Min(bounds.Width, bounds.Height));
+        path.AddArc(bounds.X, bounds.Y, diameter, diameter, 180, 90);
+        path.AddArc(bounds.Right - diameter, bounds.Y, diameter, diameter, 270, 90);
+        path.AddArc(bounds.Right - diameter, bounds.Bottom - diameter, diameter, diameter, 0, 90);
+        path.AddArc(bounds.X, bounds.Bottom - diameter, diameter, diameter, 90, 90);
+        path.CloseFigure();
+        using var brush = new SolidBrush(color);
+        graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        graphics.FillPath(brush, path);
+    }
 
     public static void MakePrimary(Button button)
     {
@@ -109,6 +128,7 @@ internal static class Glyph
     public const char Delete = '';
     public const char Warning = '';
     public const char Download = '';
+    public const char Help = '';
     public const char Folder = '';
     public const char List = '';
     public const char OpenFolder = '';
