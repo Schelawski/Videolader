@@ -124,7 +124,7 @@ public sealed class CliRunner(
             }
 
             if (needsPause && settings.PauseSeconds > 0)
-                await Task.Delay(TimeSpan.FromSeconds(settings.PauseSeconds), ct).ConfigureAwait(false);
+                await Task.Delay(PauseTiming.Next(settings.PauseSeconds, settings.RandomPause), ct).ConfigureAwait(false);
             needsPause = true;
 
             _log.WriteLine($"[{i + 1}/{entries.Count}] {entry.Id} – {entry.Title ?? "(Titel unbekannt)"}");

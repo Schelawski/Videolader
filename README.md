@@ -90,7 +90,7 @@ Zeile aus der Archivdatei.
 | Qualität | Beste, bis 1080p (Standard), bis 720p, bis 480p oder nur Audio. |
 | Cookies aus Browser | Nur nötig, wenn YouTube „Sign in to confirm you're not a bot“ meldet. Firefox funktioniert am zuverlässigsten, denn Chrome/Edge verschlüsseln ihre Cookies unter Windows so, dass yt-dlp sie oft nicht lesen kann. |
 | Untertitel / Sprachen | z. B. `ru` oder `ru,de,en`. Hochgeladene Untertitel haben Vorrang vor automatischen. Achtung: Bei automatischen Untertiteln liefert YouTube für fremde Sprachen maschinelle Übersetzungen. |
-| Pause | Sekunden zwischen zwei Downloads, schützt vor YouTubes Drosselung (HTTP 429). |
+| Pause | Sekunden zwischen zwei Downloads, schützt vor YouTubes Drosselung (HTTP 429). Mit „zufällig bis +50 %“ (Standard) ist der eingestellte Wert die Mindestpause, jede Pause wird zufällig um bis zu die Hälfte verlängert (45 s → 45 bis 67 s), damit kein gleichmäßiger Takt entsteht. Gilt auch für die Kommandozeile. |
 | Limit | Höchstens so viele Videos pro Lauf (0 = alle). Bei langen Listen z. B. 50 und beim nächsten Mal einfach weitermachen: Fertige Videos stehen im Archiv und werden übersprungen. |
 | YouTube-API-Key | Optional. Damit werden Playlists und Titel über die offizielle API gelesen (schnell, 1 Quota-Einheit pro 50 Videos). Ohne Key übernimmt das yt-dlp bzw. YouTubes oEmbed-Schnittstelle. **Zum Herunterladen wird der Key nicht gebraucht**, weil die API keine Videodateien liefert. |
 

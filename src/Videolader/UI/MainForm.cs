@@ -39,6 +39,7 @@ internal sealed class MainForm : Form
     private readonly TextBox _txtLanguages = new() { Width = 110 };
     private readonly CheckBox _chkSkip = new() { Text = "Bereits heruntergeladene überspringen", AutoSize = true, Margin = new Padding(3, 5, 18, 3) };
     private readonly NumericUpDown _numPause = new() { Width = 60, Minimum = 0, Maximum = AppSettings.MaxPauseSeconds };
+    private readonly CheckBox _chkRandomPause = new() { Text = "zufällig bis +50 %", AutoSize = true, Margin = new Padding(6, 5, 3, 3) };
     private readonly NumericUpDown _numMaxVideos = new() { Width = 70, Minimum = 0, Maximum = AppSettings.MaxVideosPerRunLimit };
     private readonly TextBox _txtApiKey = new() { Width = 330, UseSystemPasswordChar = true };
     private readonly CheckBox _chkShowKey = new() { Text = "anzeigen", AutoSize = true, Margin = new Padding(6, 5, 12, 3) };
@@ -195,7 +196,7 @@ internal sealed class MainForm : Form
             "z. B. ru,de,en – die erste Sprache gilt auch für die Titel in der Liste."));
         AddRow(table, "Optionen:", Flow(
             _chkSkip,
-            UiStyle.CreateLabel("Pause zwischen Downloads:"), _numPause, UiStyle.CreateLabel("s")));
+            UiStyle.CreateLabel("Pause zwischen Downloads:"), _numPause, UiStyle.CreateLabel("s"), _chkRandomPause));
         AddRow(table, "Limit:", Flow(
             UiStyle.CreateLabel("Höchstens"), _numMaxVideos, UiStyle.CreateLabel("Videos pro Lauf"),
             UiStyle.CreateHint("(0 = alle markierten)")));
@@ -542,8 +543,9 @@ internal sealed class MainForm : Form
 
                 if (needsPause && _settings.PauseSeconds > 0)
                 {
-                    _lblProgress.Text = $"Pause {_settings.PauseSeconds} s…";
-                    await Task.Delay(TimeSpan.FromSeconds(_settings.PauseSeconds), ct);
+                    var pause = PauseTiming.Next(_settings.PauseSeconds, _settings.RandomPause);
+                    _lblProgress.Text = $"Pause {pause.TotalSeconds:0} s…";
+                    await Task.Delay(pause, ct);
                 }
 
                 needsPause = true;
@@ -787,7 +789,7 @@ internal sealed class MainForm : Form
         foreach (var control in new Control[]
                  {
                      _txtInput, _btnLoad, _btnClearInput, _txtFolder, _btnBrowse, _cmbQuality, _cmbCookies,
-                     _chkSubtitles, _chkSkip, _numPause, _numMaxVideos, _txtApiKey, _btnTools, _btnAll, _btnNone, _btnOnlyNew, _btnDownload,
+                     _chkSubtitles, _chkSkip, _numPause, _chkRandomPause, _numMaxVideos, _txtApiKey, _btnTools, _btnAll, _btnNone, _btnOnlyNew, _btnDownload,
                  })
         {
             control.Enabled = !busy;
@@ -814,6 +816,7 @@ internal sealed class MainForm : Form
         _txtLanguages.Text = _settings.SubtitleLanguages;
         _chkSkip.Checked = _settings.SkipExisting;
         _numPause.Value = _settings.PauseSeconds;
+        _chkRandomPause.Checked = _settings.RandomPause;
         _numMaxVideos.Value = _settings.MaxVideosPerRun;
         _txtApiKey.Text = _settings.ApiKey;
     }
@@ -828,6 +831,7 @@ internal sealed class MainForm : Form
         _settings.SubtitleLanguages = _txtLanguages.Text;
         _settings.SkipExisting = _chkSkip.Checked;
         _settings.PauseSeconds = (int)_numPause.Value;
+        _settings.RandomPause = _chkRandomPause.Checked;
         _settings.MaxVideosPerRun = (int)_numMaxVideos.Value;
         _settings.ApiKey = _txtApiKey.Text;
         _settings.Normalize();

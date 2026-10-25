@@ -44,6 +44,9 @@ public sealed class AppSettings
     /// <summary>Pause between two downloads in seconds (protects against YouTube rate limits).</summary>
     public int PauseSeconds { get; set; } = 3;
 
+    /// <summary>Lengthen each pause by a random amount (see <see cref="PauseTiming"/>), so the rhythm is less regular.</summary>
+    public bool RandomPause { get; set; } = true;
+
     /// <summary>Stop after this many download attempts per run (0 = no limit). Skipped videos do not count.</summary>
     public int MaxVideosPerRun { get; set; }
 
