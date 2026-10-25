@@ -1,0 +1,47 @@
+name: Bug report / Fehler melden / Сообщить об ошибке
+description: Something does not work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting! You may write in English, German or Russian.
+        Please do **not** post links to private videos, cookies or your API key.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: The relevant lines from the log at the bottom of the Videolader window (the error and the “Tip” below it).
+      render: text
+  - type: input
+    id: link
+    attributes:
+      label: Link or ID
+      description: A public video or playlist that shows the problem, if any.
+  - type: input
+    id: version
+    attributes:
+      label: Videolader version
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: e.g. Windows 11 24H2
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language of the user interface
+      options:
+        - English
+        - Deutsch
+        - Русский

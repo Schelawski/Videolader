@@ -1,0 +1,19 @@
+name: Idea / Idee / Идея
+description: Suggest a new feature or an improvement.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: You may write in English, German or Russian.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Videolader to do?
+      description: Describe the idea and the situation in which it would help you.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: How do you do it today?
+      description: Optional – your current workaround, if any.

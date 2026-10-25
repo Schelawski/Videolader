@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security problem
+    url: https://github.com/Schelawski/Videolader/security/advisories/new
+    about: Please report security problems privately, not in a public issue.
+  - name: Problems with yt-dlp itself
+    url: https://github.com/yt-dlp/yt-dlp/issues
+    about: If a video fails in yt-dlp too (outside Videolader), please report it there.
