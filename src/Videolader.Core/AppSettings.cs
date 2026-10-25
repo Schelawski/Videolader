@@ -50,6 +50,9 @@ public sealed class AppSettings
     /// <summary>Stop after this many download attempts per run (0 = no limit). Skipped videos do not count.</summary>
     public int MaxVideosPerRun { get; set; }
 
+    /// <summary>Show the log below the video list.</summary>
+    public bool ShowLog { get; set; } = true;
+
     /// <summary>Last content of the input box.</summary>
     public string LastInput { get; set; } = string.Empty;
 

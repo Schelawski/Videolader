@@ -6,7 +6,8 @@ using Videolader.Core;
 namespace Videolader.UI;
 
 /// <summary>
-/// The only window: input box for links/IDs, settings, the video list and the log.
+/// The only window. Tab "Download": input box for links/IDs and the common options side by side, below them the
+/// video list and the log. Tab "Einstellungen": rarely used settings (cookies, API key, tools).
 /// Workflow: paste links → "Liste laden" → check the videos → "Herunterladen".
 /// </summary>
 internal sealed class MainForm : Form
@@ -33,11 +34,11 @@ internal sealed class MainForm : Form
     private readonly TextBox _txtFolder = new() { Dock = DockStyle.Fill, Margin = new Padding(3, 4, 3, 3) };
     private readonly Button _btnBrowse = UiStyle.CreateButton("Durchsuchen…");
     private readonly Button _btnOpenFolder = UiStyle.CreateButton("Öffnen");
-    private readonly ComboBox _cmbQuality = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190 };
+    private readonly ComboBox _cmbQuality = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private readonly ComboBox _cmbCookies = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 110 };
     private readonly CheckBox _chkSubtitles = new() { Text = "herunterladen", AutoSize = true, Margin = new Padding(3, 5, 12, 3) };
     private readonly TextBox _txtLanguages = new() { Width = 110 };
-    private readonly CheckBox _chkSkip = new() { Text = "Bereits heruntergeladene überspringen", AutoSize = true, Margin = new Padding(3, 5, 18, 3) };
+    private readonly CheckBox _chkSkip = new() { Text = "Vorhandene überspringen", AutoSize = true, Margin = new Padding(12, 5, 3, 3) };
     private readonly NumericUpDown _numPause = new() { Width = 60, Minimum = 0, Maximum = AppSettings.MaxPauseSeconds };
     private readonly CheckBox _chkRandomPause = new() { Text = "zufällig bis +50 %", AutoSize = true, Margin = new Padding(6, 5, 3, 3) };
     private readonly NumericUpDown _numMaxVideos = new() { Width = 70, Minimum = 0, Maximum = AppSettings.MaxVideosPerRunLimit };
@@ -45,6 +46,9 @@ internal sealed class MainForm : Form
     private readonly CheckBox _chkShowKey = new() { Text = "anzeigen", AutoSize = true, Margin = new Padding(6, 5, 12, 3) };
     private readonly Label _lblTools = UiStyle.CreateLabel(string.Empty);
     private readonly Button _btnTools = UiStyle.CreateButton("Einrichten…");
+    private readonly TabControl _tabs = new() { Dock = DockStyle.Fill };
+    private readonly TabPage _tabSettings = new("Einstellungen") { Padding = new Padding(8), UseVisualStyleBackColor = true };
+    private readonly ToolTip _tips = new() { AutoPopDelay = 15000 };
 
     // List
     private readonly DataGridView _grid = new();
@@ -61,6 +65,7 @@ internal sealed class MainForm : Form
     private readonly Label _lblCount = UiStyle.CreateHint(string.Empty);
     private readonly SplitContainer _split = new() { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal };
     private readonly LogBox _log = new();
+    private readonly Button _btnToggleLog = UiStyle.CreateButton("Protokoll ausblenden");
 
     // Actions
     private readonly Button _btnDownload = UiStyle.CreateButton("Herunterladen");
@@ -76,7 +81,7 @@ internal sealed class MainForm : Form
 
         Text = AppTitle;
         StartPosition = FormStartPosition.CenterScreen;
-        MinimumSize = new Size(920, 880);
+        MinimumSize = new Size(960, 640);
         var area = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1280, 1000);
         Size = new Size(Math.Min(1180, area.Width), Math.Min(920, area.Height));
 
@@ -107,59 +112,80 @@ internal sealed class MainForm : Form
 
     private void BuildLayout()
     {
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(10) };
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(10) };
         // Fixed to the window width: content wraps instead of widening the column and being cut off.
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-        root.Controls.Add(BuildInputGroup(), 0, 0);
-        root.Controls.Add(BuildSettingsGroup(), 0, 1);
-        root.Controls.Add(BuildListArea(), 0, 2);
-        root.Controls.Add(BuildActionBar(), 0, 3);
+        var downloadPage = new TabPage("Download") { Padding = new Padding(8), UseVisualStyleBackColor = true };
+        downloadPage.Controls.Add(BuildDownloadPage());
+        _tabSettings.Controls.Add(BuildSettingsPage());
+        _tabs.TabPages.Add(downloadPage);
+        _tabs.TabPages.Add(_tabSettings);
+
+        root.Controls.Add(_tabs, 0, 0);
+        root.Controls.Add(BuildActionBar(), 0, 1);
 
         Controls.Add(root);
+    }
+
+    /// <summary>Input and options side by side (so they need little height), the list below gets the rest.</summary>
+    private TableLayoutPanel BuildDownloadPage()
+    {
+        var top = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, AutoSize = true, Margin = Padding.Empty };
+        top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+        top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55));
+        top.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        var input = BuildInputGroup();
+        input.Margin = new Padding(0, 0, 8, 6);
+        top.Controls.Add(input, 0, 0);
+        top.Controls.Add(BuildOptionsGroup(), 1, 0);
+
+        var page = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Margin = Padding.Empty };
+        page.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        page.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        page.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        page.Controls.Add(top, 0, 0);
+        page.Controls.Add(BuildListArea(), 0, 1);
+        return page;
     }
 
     private GroupBox BuildInputGroup()
     {
         var group = NewGroup("Videos und Playlists");
-        var table = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, AutoSize = true };
+        var table = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, AutoSize = true };
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        // The text box takes whatever height the options next to it need.
+        table.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
         _txtInput.Multiline = true;
         _txtInput.AcceptsReturn = true;
         _txtInput.ScrollBars = ScrollBars.Vertical;
         _txtInput.Dock = DockStyle.Fill;
-        _txtInput.MinimumSize = new Size(0, 72);
+        _txtInput.MinimumSize = new Size(0, 90);
         _txtInput.Font = UiStyle.CreateMonospaceFont(9.5f);
         _txtInput.PlaceholderText = "https://www.youtube.com/playlist?list=PL…\r\nhttps://youtu.be/dQw4w9WgXcQ\r\ndQw4w9WgXcQ";
+        _tips.SetToolTip(_txtInput, "Ein Eintrag pro Zeile: Video-, Playlist- oder Kanal-Links bzw. IDs.");
 
-        var buttons = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, WrapContents = false, Margin = new Padding(6, 0, 0, 0) };
         UiStyle.MakePrimary(_btnLoad);
         _btnLoad.MinimumSize = new Size(120, 32);
-        _btnClearInput.MinimumSize = new Size(120, 30);
-        buttons.Controls.Add(_btnLoad);
-        buttons.Controls.Add(_btnClearInput);
+        _btnClearInput.MinimumSize = new Size(0, 32);
+        var buttons = Flow(_btnLoad, _btnClearInput, UiStyle.CreateHint("(Strg+Enter)"));
+        buttons.Margin = new Padding(0, 4, 0, 0);
 
         table.Controls.Add(_txtInput, 0, 0);
-        table.Controls.Add(buttons, 1, 0);
-        table.Controls.Add(UiStyle.CreateHint(
-            "Ein Eintrag pro Zeile: Video-, Playlist- oder Kanal-Links bzw. IDs. Strg+Enter lädt die Liste."), 0, 1);
-        table.SetColumnSpan(table.GetControlFromPosition(0, 1)!, 2);
+        table.Controls.Add(buttons, 0, 1);
 
         group.Controls.Add(table);
         return group;
     }
 
-    private GroupBox BuildSettingsGroup()
+    /// <summary>The options needed for almost every download.</summary>
+    private GroupBox BuildOptionsGroup()
     {
-        var group = NewGroup("Einstellungen");
+        var group = NewGroup("Optionen");
         var table = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, AutoSize = true };
         table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -176,6 +202,28 @@ internal sealed class MainForm : Form
         foreach (var quality in Enum.GetValues<VideoQuality>())
             _cmbQuality.Items.Add(new Choice<VideoQuality>(quality, quality.GetDisplayName()));
 
+        AddRow(table, "Zielordner:", folderRow);
+        AddRow(table, "Qualität:", Flow(_cmbQuality, _chkSkip));
+        AddRow(table, "Untertitel:", Flow(_chkSubtitles, UiStyle.CreateLabel("Sprachen:"), _txtLanguages));
+        AddRow(table, "Pause:", Flow(_numPause, UiStyle.CreateLabel("s"), _chkRandomPause));
+        AddRow(table, "Limit:", Flow(_numMaxVideos, UiStyle.CreateLabel("Videos pro Lauf"), UiStyle.CreateHint("(0 = alle markierten)")));
+
+        _tips.SetToolTip(_chkSkip, "Videos überspringen, die schon im Zielordner liegen oder im Archiv stehen.");
+        _tips.SetToolTip(_txtLanguages, "z. B. ru,de,en – die erste Sprache gilt auch für die Titel in der Liste.");
+        _tips.SetToolTip(_numPause, "Mindestpause zwischen zwei Downloads, schützt vor YouTubes Drosselung.");
+        _tips.SetToolTip(_chkRandomPause, "Jede Pause wird zufällig um bis zu 50 % verlängert, damit kein gleichmäßiger Takt entsteht.");
+
+        group.Controls.Add(table);
+        return group;
+    }
+
+    /// <summary>Settings that are rarely needed.</summary>
+    private TableLayoutPanel BuildSettingsPage()
+    {
+        var table = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 2, AutoSize = true };
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
         _cmbCookies.Items.AddRange(
         [
             new Choice<string>(string.Empty, "keine"),
@@ -185,28 +233,14 @@ internal sealed class MainForm : Form
             new Choice<string>("brave", "Brave"),
         ]);
 
-        AddRow(table, "Zielordner:", folderRow);
-        AddRow(table, "Qualität:", WithHint(Flow(
-            _cmbQuality,
-            UiStyle.CreateLabel("Cookies aus Browser:"), _cmbCookies),
-            "Cookies nur nötig, wenn YouTube eine Anmeldung verlangt."));
-        AddRow(table, "Untertitel:", WithHint(Flow(
-            _chkSubtitles,
-            UiStyle.CreateLabel("Sprachen:"), _txtLanguages),
-            "z. B. ru,de,en – die erste Sprache gilt auch für die Titel in der Liste."));
-        AddRow(table, "Optionen:", Flow(
-            _chkSkip,
-            UiStyle.CreateLabel("Pause zwischen Downloads:"), _numPause, UiStyle.CreateLabel("s"), _chkRandomPause));
-        AddRow(table, "Limit:", Flow(
-            UiStyle.CreateLabel("Höchstens"), _numMaxVideos, UiStyle.CreateLabel("Videos pro Lauf"),
-            UiStyle.CreateHint("(0 = alle markierten)")));
-        AddRow(table, "YouTube-API-Key:", WithHint(Flow(
-            _txtApiKey, _chkShowKey),
+        AddRow(table, "Cookies aus Browser:", WithHint(Flow(_cmbCookies),
+            "Nur nötig, wenn YouTube eine Anmeldung verlangt („Sign in to confirm you're not a bot“). " +
+            "Firefox funktioniert am zuverlässigsten."));
+        AddRow(table, "YouTube-API-Key:", WithHint(Flow(_txtApiKey, _chkShowKey),
             "Optional – lädt Playlists und Titel schneller, für den Download nicht nötig."));
-        AddRow(table, "Werkzeuge:", Flow(_lblTools, _btnTools));
-
-        group.Controls.Add(table);
-        return group;
+        AddRow(table, "Werkzeuge:", WithHint(Flow(_lblTools, _btnTools),
+            $"yt-dlp, ffmpeg und Deno liegen in {_toolsDirectory}. yt-dlp wird einmal am Tag automatisch aktualisiert."));
+        return table;
     }
 
     private Control BuildListArea()
@@ -215,7 +249,12 @@ internal sealed class MainForm : Form
         var listPanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Margin = Padding.Empty };
         listPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         listPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        listPanel.Controls.Add(Flow(_btnAll, _btnNone, _btnOnlyNew, _lblCount), 0, 0);
+        var toolbar = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, AutoSize = true, Margin = Padding.Empty };
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        toolbar.Controls.Add(Flow(_btnAll, _btnNone, _btnOnlyNew, _lblCount), 0, 0);
+        toolbar.Controls.Add(_btnToggleLog, 1, 0);
+        listPanel.Controls.Add(toolbar, 0, 0);
         listPanel.Controls.Add(_grid, 0, 1);
 
         SetUpGrid();
@@ -226,7 +265,9 @@ internal sealed class MainForm : Form
 
         _split.Panel1.Controls.Add(listPanel);
         _split.Panel2.Controls.Add(logGroup);
-        _split.Margin = new Padding(0, 6, 0, 0);
+        _split.Panel1MinSize = 120;
+        _split.Panel2MinSize = 60;
+        _split.Margin = Padding.Empty;
         return _split;
     }
 
@@ -298,6 +339,7 @@ internal sealed class MainForm : Form
         _chkSubtitles.CheckedChanged += (_, _) => _txtLanguages.Enabled = _chkSubtitles.Checked && !_busy;
         _chkShowKey.CheckedChanged += (_, _) => _txtApiKey.UseSystemPasswordChar = !_chkShowKey.Checked;
         _btnTools.Click += async (_, _) => await SetUpToolsAsync();
+        _btnToggleLog.Click += (_, _) => SetLogVisible(_split.Panel2Collapsed);
 
         _btnAll.Click += (_, _) => SetChecked(_ => true);
         _btnNone.Click += (_, _) => SetChecked(_ => false);
@@ -342,14 +384,16 @@ internal sealed class MainForm : Form
     {
         var maxDistance = _split.Height - _split.Panel2MinSize - _split.SplitterWidth;
         if (maxDistance > _split.Panel1MinSize)
-            _split.SplitterDistance = Math.Clamp((int)(_split.Height * 0.62), _split.Panel1MinSize, maxDistance);
+            _split.SplitterDistance = Math.Clamp((int)(_split.Height * 0.75), _split.Panel1MinSize, maxDistance);
         RefreshTools();
         _log.AppendMessage($"Werkzeug-Ordner: {_toolsDirectory}");
 
         if (!_tools.IsComplete)
         {
             var missing = string.Join(", ", MissingTools());
-            _log.AppendMessage($"Es fehlen: {missing}. Klicke bei „Werkzeuge“ auf „Einrichten…“ – sie werden automatisch heruntergeladen.");
+            _log.AppendMessage($"Es fehlen: {missing}. Klicke unter „Einstellungen“ bei „Werkzeuge“ auf „Einrichten…“ – " +
+                               "sie werden automatisch heruntergeladen.");
+            _tabs.SelectedTab = _tabSettings;
             return;
         }
 
@@ -636,6 +680,7 @@ internal sealed class MainForm : Form
         _lblTools.Text = $"yt-dlp {Mark(_tools.YtDlp)}    ffmpeg {Mark(_tools.Ffmpeg)}    Deno {Mark(_tools.Deno)}";
         _lblTools.ForeColor = _tools.IsComplete ? UiStyle.SuccessText : UiStyle.DangerText;
         _btnTools.Text = _tools.IsComplete ? "Aktualisieren" : "Einrichten…";
+        _tabSettings.Text = _tools.IsComplete ? "Einstellungen" : "Einstellungen ⚠ Werkzeuge fehlen";
     }
 
     private IEnumerable<string> MissingTools()
@@ -819,6 +864,14 @@ internal sealed class MainForm : Form
         _chkRandomPause.Checked = _settings.RandomPause;
         _numMaxVideos.Value = _settings.MaxVideosPerRun;
         _txtApiKey.Text = _settings.ApiKey;
+        SetLogVisible(_settings.ShowLog);
+    }
+
+    private void SetLogVisible(bool visible)
+    {
+        _split.Panel2Collapsed = !visible;
+        _btnToggleLog.Text = visible ? "Protokoll ausblenden" : "Protokoll anzeigen";
+        _settings.ShowLog = visible;
     }
 
     private void ReadSettingsFromControls()

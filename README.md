@@ -84,6 +84,11 @@ Zeile aus der Archivdatei.
 
 ### Einstellungen
 
+Zielordner, Qualität, Untertitel, Pause und Limit stehen auf der Registerkarte **Download** neben
+dem Eingabefeld. Selten Gebrauchtes (Cookies, API-Key, Werkzeuge) liegt auf der Registerkarte
+**Einstellungen**. Das Protokoll unter der Liste lässt sich mit „Protokoll ausblenden“ wegklappen,
+dann hat die Liste mehr Platz.
+
 | Einstellung | Bedeutung |
 |---|---|
 | Zielordner | Hier landen die Videos. Standard: `Videos\Videolader`. |
@@ -124,7 +129,7 @@ in PowerShell. Bei umgeleiteter Ausgabe (`> datei.txt`, Pipe) wird die Umleitung
 
 ## Werkzeuge
 
-Beim ersten Start fehlen drei Programme. **Werkzeuge → Einrichten…** lädt sie von den offiziellen
+Beim ersten Start fehlen drei Programme. **Einstellungen → Werkzeuge → Einrichten…** lädt sie von den offiziellen
 GitHub-Releases in den Ordner `tools` neben der exe (oder nach `%LOCALAPPDATA%\Videolader\tools`):
 
 | Programm | Wofür |
