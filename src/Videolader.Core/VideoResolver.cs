@@ -58,8 +58,7 @@ public sealed class VideoResolver(HttpClient http, YtDlpClient? ytDlp, string? a
                     }
 
                     var name = list.Title ?? item.Value;
-                    log.Report($"„{name}“: {list.Entries.Count} Videos" +
-                               (added < list.Entries.Count ? $", davon {list.Entries.Count - added} schon in der Liste" : string.Empty) + ".");
+                    log.Report(UiText.PlaylistLoaded(name, list.Entries.Count, list.Entries.Count - added));
                     break;
             }
         }
@@ -68,7 +67,7 @@ public sealed class VideoResolver(HttpClient http, YtDlpClient? ytDlp, string? a
             await FillSinglesAsync(singles, ct).ConfigureAwait(false);
 
         if (duplicates > 0)
-            log.Report($"{duplicates} doppelte Einträge wurden zusammengefasst.");
+            log.Report(UiText.DuplicatesMerged(duplicates));
 
         return result;
     }
@@ -83,13 +82,13 @@ public sealed class VideoResolver(HttpClient http, YtDlpClient? ytDlp, string? a
             }
             catch (Exception ex) when (ex is YouTubeApiException or HttpRequestException)
             {
-                log.Report($"YouTube-API: {ex.Message} – versuche es mit yt-dlp.");
+                log.Report(UiText.ApiFallbackToYtDlp(ex.Message));
             }
         }
 
         if (ytDlp is null)
         {
-            log.Report($"Playlist {item.Value} kann nicht geladen werden: yt-dlp fehlt (oder API-Key eintragen).");
+            log.Report(UiText.PlaylistNeedsYtDlp(item.Value));
             return null;
         }
 
@@ -129,7 +128,7 @@ public sealed class VideoResolver(HttpClient http, YtDlpClient? ytDlp, string? a
             }
             catch (Exception ex) when (ex is YouTubeApiException or HttpRequestException)
             {
-                log.Report($"YouTube-API: {ex.Message} – Titel werden ohne API ermittelt.");
+                log.Report(UiText.ApiFallbackForTitles(ex.Message));
             }
         }
 

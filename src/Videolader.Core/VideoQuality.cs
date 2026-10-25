@@ -21,15 +21,7 @@ public enum VideoQuality
 
 public static class VideoQualities
 {
-    public static string GetDisplayName(this VideoQuality quality) => quality switch
-    {
-        VideoQuality.Best => "Beste Qualität (MP4)",
-        VideoQuality.Max1080 => "Bis 1080p (MP4)",
-        VideoQuality.Max720 => "Bis 720p (MP4)",
-        VideoQuality.Max480 => "Bis 480p (MP4)",
-        VideoQuality.AudioOnly => "Nur Audio (M4A)",
-        _ => quality.ToString(),
-    };
+    public static string GetDisplayName(this VideoQuality quality) => UiText.QualityName(quality);
 
     /// <summary>
     /// yt-dlp arguments that select the formats. H.264 video and AAC audio are preferred because

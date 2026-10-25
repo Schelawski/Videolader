@@ -52,14 +52,14 @@ public static class YtDlpOutput
     public static string? DetectPhase(string line)
     {
         if (line.StartsWith("[Merger]", StringComparison.Ordinal))
-            return "Zusammenführen…";
+            return UiText.PhaseMerging;
         if (line.StartsWith("[ExtractAudio]", StringComparison.Ordinal))
-            return "Audio umwandeln…";
+            return UiText.PhaseExtractingAudio;
         if (line.StartsWith("[info] Writing video subtitles", StringComparison.Ordinal) ||
             line.StartsWith("[info] Downloading subtitles", StringComparison.Ordinal))
-            return "Untertitel…";
+            return UiText.PhaseSubtitles;
         if (line.Contains("has already been downloaded", StringComparison.Ordinal))
-            return "Bereits vorhanden";
+            return UiText.StatusExisting;
         return null;
     }
 
@@ -71,20 +71,18 @@ public static class YtDlpOutput
     public static string? GetHint(string error)
     {
         if (IsCookieError(error))
-            return "Die Cookies lassen sich nicht aus dem Browser lesen. Chrome, Edge und Brave sperren sie unter Windows, " +
-                   "solange der Browser läuft, und verschlüsseln sie so, dass yt-dlp sie nicht lesen kann. " +
-                   "Stell die Cookies auf „keine“ (meist gar nicht nötig) oder nimm Firefox.";
+            return UiText.HintCookies;
         if (error.Contains("Sign in to confirm", StringComparison.OrdinalIgnoreCase))
-            return "YouTube verlangt eine Anmeldung. Wähle unter „Einstellungen“ bei „Cookies aus Browser“ einen Browser, in dem du bei YouTube angemeldet bist (Firefox funktioniert, Chrome/Edge/Brave meist nicht).";
+            return UiText.HintSignIn;
         if (error.Contains("HTTP Error 429", StringComparison.OrdinalIgnoreCase))
-            return "YouTube drosselt die Anfragen (429). Warte etwas und erhöhe die Pause zwischen den Downloads.";
+            return UiText.HintThrottled;
         if (error.Contains("Private video", StringComparison.OrdinalIgnoreCase))
-            return "Das Video ist privat.";
+            return UiText.HintPrivate;
         if (error.Contains("JavaScript runtime", StringComparison.OrdinalIgnoreCase) ||
             error.Contains("n challenge", StringComparison.OrdinalIgnoreCase))
-            return "Deno fehlt oder ist veraltet. Richte die Werkzeuge neu ein (Einstellungen → Werkzeuge).";
+            return UiText.HintDeno;
         if (error.Contains("ffmpeg", StringComparison.OrdinalIgnoreCase))
-            return "ffmpeg fehlt. Richte die Werkzeuge ein (Einstellungen → Werkzeuge).";
+            return UiText.HintFfmpeg;
         return null;
     }
 

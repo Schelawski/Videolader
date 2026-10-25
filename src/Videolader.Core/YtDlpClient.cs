@@ -16,7 +16,7 @@ public sealed class YtDlpClient
     public YtDlpClient(ToolSet tools)
     {
         _tools = tools;
-        _ytDlp = tools.YtDlp ?? throw new InvalidOperationException("yt-dlp wurde nicht gefunden.");
+        _ytDlp = tools.YtDlp ?? throw new InvalidOperationException(UiText.YtDlpNotFound);
     }
 
     public async Task<string> GetVersionAsync(CancellationToken ct = default)
@@ -44,7 +44,7 @@ public sealed class YtDlpClient
             if (error is null)
             {
                 var text = stderr.Trim();
-                error = text.Length > 0 ? text : $"yt-dlp beendet mit Code {exitCode}.";
+                error = text.Length > 0 ? text : UiText.YtDlpExited(exitCode);
             }
 
             throw new YtDlpException(error);

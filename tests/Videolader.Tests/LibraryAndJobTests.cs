@@ -48,6 +48,8 @@ public class VideoLibraryTests
         Assert.False(VideoLibrary.Open(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))).IsDownloaded("dQw4w9WgXcQ"));
 }
 
+/// <summary>Reads translated texts (download phases), so it runs in the <see cref="UiTextCollection"/>.</summary>
+[Collection(nameof(UiTextCollection))]
 public class DownloadJobTests
 {
     private const string Id = "dQw4w9WgXcQ";
@@ -104,7 +106,7 @@ public class DownloadJobTests
         var actual = Directory.GetFileSystemEntries(folder.Path).Select(p => Path.GetFileName(p)!).ToArray();
         Assert.Equal(expected.Order().ToArray(), actual.Order().ToArray());
         Assert.Contains(progress.Items, u => u.Percent == 50);
-        Assert.Contains(progress.Items, u => u.Phase == "Zusammenführen…");
+        Assert.Contains(progress.Items, u => u.Phase == UiText.PhaseMerging);
 
         var info = VideoInfoFile.Deserialize(File.ReadAllText(VideoInfoFile.GetPath(folder.Path, Id)));
         Assert.Equal(Id, info.Id);

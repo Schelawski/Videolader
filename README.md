@@ -7,6 +7,10 @@ im Whisper-JSON-Format. Bereits heruntergeladene Videos werden erkannt und über
 Unter der Haube arbeitet [yt-dlp](https://github.com/yt-dlp/yt-dlp). Die App steuert es, verwaltet
 die Liste und schreibt die Zusatzdateien.
 
+Oberfläche und Kommandozeile gibt es auf **Englisch, Deutsch und Russisch**. Beim ersten Start
+richtet sich die Sprache nach Windows (Deutsch bzw. Russisch, sonst Englisch); umschalten lässt sie
+sich unter **Einstellungen → Sprache**, auf der Kommandozeile mit `--lang en|de|ru`.
+
 ## Was pro Video entsteht
 
 ```
@@ -85,7 +89,7 @@ Zeile aus der Archivdatei.
 ### Einstellungen
 
 Zielordner, Qualität, Untertitel, Pause und Limit stehen auf der Registerkarte **Download** neben
-dem Eingabefeld. Selten Gebrauchtes (Cookies, API-Key, Werkzeuge) liegt auf der Registerkarte
+dem Eingabefeld. Selten Gebrauchtes (Sprache, Cookies, API-Key, Werkzeuge) liegt auf der Registerkarte
 **Einstellungen**. Das Protokoll unter der Liste lässt sich mit „Protokoll ausblenden“ wegklappen,
 dann hat die Liste mehr Platz.
 
@@ -113,7 +117,7 @@ Videolader.exe setup                                   # yt-dlp, ffmpeg, Deno ei
 Videolader.exe dQw4w9WgXcQ --out D:\Videos             # ein Video
 Videolader.exe PLxxxxxxxxxxx --limit 50 --pause 5      # eine Playlist, höchstens 50 pro Lauf
 Videolader.exe @KanalName --list                       # Kanal nur auflisten
-Videolader.exe --help                                  # alle Optionen
+Videolader.exe --help --lang en                        # alle Optionen, auf Englisch
 ```
 
 Nicht angegebene Optionen kommen aus den gespeicherten Einstellungen. Die Kommandozeile ändert

@@ -7,8 +7,8 @@ namespace Videolader.UI;
 
 /// <summary>
 /// The only window. Tab "Download": input box for links/IDs and the common options side by side, below them the
-/// video list and the log. Tab "Einstellungen": rarely used settings (cookies, API key, tools).
-/// Workflow: paste links → "Liste laden" → check the videos → "Herunterladen".
+/// video list and the log. Tab "Settings": rarely used settings (language, cookies, API key, tools).
+/// Workflow: paste links → "Load list" → check the videos → "Download". All texts come from <see cref="UiText"/>.
 /// </summary>
 internal sealed class MainForm : Form
 {
@@ -19,7 +19,7 @@ internal sealed class MainForm : Form
 
     private static readonly HttpClient Http = CreateHttpClient();
 
-    private readonly SettingsStore _store = new(new DpapiSecretProtector());
+    private readonly SettingsStore _store;
     private readonly AppSettings _settings;
     private readonly string _toolsDirectory;
     private readonly List<VideoRow> _rows = [];
@@ -30,55 +30,60 @@ internal sealed class MainForm : Form
 
     // Input
     private readonly TextBox _txtInput = new();
-    private readonly Button _btnLoad = UiStyle.CreateButton("Liste laden");
-    private readonly Button _btnClearInput = UiStyle.CreateButton("Leeren");
+    private readonly Button _btnLoad = UiStyle.CreateButton(UiText.LoadList);
+    private readonly Button _btnClearInput = UiStyle.CreateButton(UiText.Clear);
 
     // Settings
     private readonly TextBox _txtFolder = new() { Dock = DockStyle.Fill, Margin = new Padding(3, 4, 3, 3) };
-    private readonly Button _btnBrowse = UiStyle.CreateButton("Durchsuchen…");
-    private readonly Button _btnOpenFolder = UiStyle.CreateButton("Öffnen");
+    private readonly Button _btnBrowse = UiStyle.CreateButton(UiText.Browse);
+    private readonly Button _btnOpenFolder = UiStyle.CreateButton(UiText.Open);
     private readonly ComboBox _cmbQuality = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private readonly ComboBox _cmbCookies = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190 };
-    private readonly CheckBox _chkSubtitles = new() { Text = "herunterladen", AutoSize = true, Margin = new Padding(3, 5, 12, 3) };
+    private readonly CheckBox _chkSubtitles = new() { Text = UiText.DownloadSubtitles, AutoSize = true, Margin = new Padding(3, 5, 12, 3) };
     private readonly TextBox _txtLanguages = new() { Width = 110 };
-    private readonly CheckBox _chkSkip = new() { Text = "Vorhandene überspringen", AutoSize = true, Margin = new Padding(12, 5, 3, 3) };
+    private readonly CheckBox _chkSkip = new() { Text = UiText.SkipExisting, AutoSize = true, Margin = new Padding(12, 5, 3, 3) };
     private readonly NumericUpDown _numPause = new() { Width = 60, Minimum = 0, Maximum = AppSettings.MaxPauseSeconds };
-    private readonly CheckBox _chkRandomPause = new() { Text = "zufällig bis +50 %", AutoSize = true, Margin = new Padding(6, 5, 3, 3) };
+    private readonly CheckBox _chkRandomPause = new() { Text = UiText.RandomPause, AutoSize = true, Margin = new Padding(6, 5, 3, 3) };
     private readonly NumericUpDown _numMaxVideos = new() { Width = 70, Minimum = 0, Maximum = AppSettings.MaxVideosPerRunLimit };
     private readonly TextBox _txtApiKey = new() { Width = 330, UseSystemPasswordChar = true };
-    private readonly CheckBox _chkShowKey = new() { Text = "anzeigen", AutoSize = true, Margin = new Padding(6, 5, 12, 3) };
+    private readonly CheckBox _chkShowKey = new() { Text = UiText.ShowKey, AutoSize = true, Margin = new Padding(6, 5, 12, 3) };
     private readonly Label _lblTools = UiStyle.CreateLabel(string.Empty);
-    private readonly Button _btnTools = UiStyle.CreateButton("Einrichten…");
+    private readonly Button _btnTools = UiStyle.CreateButton(UiText.ToolsSetUp);
+    private readonly ComboBox _cmbUiLanguage = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 140 };
     private readonly TabControl _tabs = new() { Dock = DockStyle.Fill };
-    private readonly TabPage _tabSettings = new("Einstellungen") { Padding = new Padding(8), UseVisualStyleBackColor = true };
+    private readonly TabPage _tabSettings = new(UiText.TabSettings) { Padding = new Padding(8), UseVisualStyleBackColor = true };
     private readonly ToolTip _tips = new() { AutoPopDelay = 15000 };
 
     // List
     private readonly DataGridView _grid = new();
     private readonly DataGridViewCheckBoxColumn _colCheck = new() { HeaderText = string.Empty, Width = 32, AutoSizeMode = DataGridViewAutoSizeColumnMode.None };
-    private readonly DataGridViewTextBoxColumn _colNr = TextColumn("Nr.", 44);
+    private readonly DataGridViewTextBoxColumn _colNr = TextColumn(UiText.ColumnNumber, 44);
     private readonly DataGridViewTextBoxColumn _colId = TextColumn("ID", 110);
-    private readonly DataGridViewTextBoxColumn _colTitle = TextColumn("Titel", 0);
-    private readonly DataGridViewTextBoxColumn _colDuration = TextColumn("Dauer", 70);
-    private readonly DataGridViewTextBoxColumn _colPlaylist = TextColumn("Playlist", 170);
-    private readonly DataGridViewTextBoxColumn _colStatus = TextColumn("Status", 190);
-    private readonly Button _btnAll = UiStyle.CreateButton("Alle");
-    private readonly Button _btnNone = UiStyle.CreateButton("Keine");
-    private readonly Button _btnOnlyNew = UiStyle.CreateButton("Nur neue");
+    private readonly DataGridViewTextBoxColumn _colTitle = TextColumn(UiText.ColumnTitle, 0);
+    private readonly DataGridViewTextBoxColumn _colDuration = TextColumn(UiText.ColumnDuration, 70);
+    private readonly DataGridViewTextBoxColumn _colPlaylist = TextColumn(UiText.ColumnPlaylist, 170);
+    private readonly DataGridViewTextBoxColumn _colStatus = TextColumn(UiText.ColumnStatus, 190);
+    private readonly Button _btnAll = UiStyle.CreateButton(UiText.SelectAll);
+    private readonly Button _btnNone = UiStyle.CreateButton(UiText.SelectNone);
+    private readonly Button _btnOnlyNew = UiStyle.CreateButton(UiText.SelectOnlyNew);
     private readonly Label _lblCount = UiStyle.CreateHint(string.Empty);
     private readonly SplitContainer _split = new() { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal };
     private readonly LogBox _log = new();
-    private readonly Button _btnToggleLog = UiStyle.CreateButton("Protokoll ausblenden");
+    private readonly Button _btnToggleLog = UiStyle.CreateButton(UiText.HideLog);
 
     // Actions
-    private readonly Button _btnDownload = UiStyle.CreateButton("Herunterladen");
-    private readonly Button _btnCancel = UiStyle.CreateButton("Abbrechen");
+    private readonly Button _btnDownload = UiStyle.CreateButton(UiText.Download);
+    private readonly Button _btnCancel = UiStyle.CreateButton(UiText.Cancel);
     private readonly ProgressBar _progress = new() { Width = 260, Height = 20, Margin = new Padding(12, 8, 6, 3) };
     private readonly Label _lblProgress = UiStyle.CreateHint(string.Empty);
 
-    public MainForm()
+    /// <param name="store">Where the settings are saved.</param>
+    /// <param name="settings">The loaded settings; <see cref="UiText.Language"/> must already match them.</param>
+    /// <param name="bounds">Position and size of the previous window after a language change, otherwise null.</param>
+    public MainForm(SettingsStore store, AppSettings settings, Rectangle? bounds = null)
     {
-        _settings = _store.Load();
+        _store = store;
+        _settings = settings;
         _toolsDirectory = ToolLocator.GetToolsDirectory(AppContext.BaseDirectory);
         _tools = ToolLocator.Locate(_toolsDirectory, AppContext.BaseDirectory);
 
@@ -89,6 +94,11 @@ internal sealed class MainForm : Form
         var area = Screen.FromPoint(Cursor.Position).WorkingArea;
         var height = (int)(area.Height * (1 - 2 * ScreenMargin));
         Size = new Size(Math.Min(1180, area.Width), Math.Min(Math.Max(height, MinimumSize.Height), area.Height));
+        if (bounds is { } previous)
+        {
+            StartPosition = FormStartPosition.Manual;
+            Bounds = previous;
+        }
 
         BuildLayout();
         ApplyIcons();
@@ -100,6 +110,9 @@ internal sealed class MainForm : Form
         Shown += OnShown;
         FormClosing += OnFormClosing;
     }
+
+    /// <summary>True when the window was closed to switch the language; Program then opens it again.</summary>
+    public bool LanguageChangeRequested { get; private set; }
 
     private enum RowStatus
     {
@@ -124,7 +137,7 @@ internal sealed class MainForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-        var downloadPage = new TabPage("Download") { Padding = new Padding(8), UseVisualStyleBackColor = true, ImageKey = "download" };
+        var downloadPage = new TabPage(UiText.TabDownload) { Padding = new Padding(8), UseVisualStyleBackColor = true, ImageKey = "download" };
         downloadPage.Controls.Add(BuildDownloadPage());
         _tabSettings.Controls.Add(BuildSettingsPage());
         _tabs.TabPages.Add(downloadPage);
@@ -188,7 +201,7 @@ internal sealed class MainForm : Form
 
     private GroupBox BuildInputGroup()
     {
-        var group = NewGroup("Videos und Playlists");
+        var group = NewGroup(UiText.GroupInput);
         var table = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, AutoSize = true };
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         // The text box takes whatever height the options next to it need.
@@ -202,12 +215,13 @@ internal sealed class MainForm : Form
         _txtInput.MinimumSize = new Size(0, 90);
         _txtInput.Font = UiStyle.CreateMonospaceFont(9.5f);
         _txtInput.PlaceholderText = "https://www.youtube.com/playlist?list=PL…\r\nhttps://youtu.be/dQw4w9WgXcQ\r\ndQw4w9WgXcQ";
-        _tips.SetToolTip(_txtInput, "Ein Eintrag pro Zeile: Video-, Playlist- oder Kanal-Links bzw. IDs.");
+        _tips.SetToolTip(_txtInput, UiText.InputTip);
 
         UiStyle.MakePrimary(_btnLoad);
         _btnLoad.MinimumSize = new Size(120, 32);
         _btnClearInput.MinimumSize = new Size(0, 32);
-        var buttons = Flow(_btnLoad, _btnClearInput, UiStyle.CreateHint("(Strg+Enter)"));
+        _tips.SetToolTip(_btnLoad, $"{UiText.LoadList} {UiText.CtrlEnterHint}");
+        var buttons = Flow(_btnLoad, _btnClearInput);
         buttons.Margin = new Padding(0, 4, 0, 0);
 
         table.Controls.Add(_txtInput, 0, 0);
@@ -220,7 +234,7 @@ internal sealed class MainForm : Form
     /// <summary>The options needed for almost every download.</summary>
     private GroupBox BuildOptionsGroup()
     {
-        var group = NewGroup("Optionen");
+        var group = NewGroup(UiText.GroupOptions);
         var table = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, AutoSize = true };
         table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -237,16 +251,16 @@ internal sealed class MainForm : Form
         foreach (var quality in Enum.GetValues<VideoQuality>())
             _cmbQuality.Items.Add(new Choice<VideoQuality>(quality, quality.GetDisplayName()));
 
-        AddRow(table, "Zielordner:", folderRow);
-        AddRow(table, "Qualität:", Flow(_cmbQuality, _chkSkip));
-        AddRow(table, "Untertitel:", Flow(_chkSubtitles, UiStyle.CreateLabel("Sprachen:"), _txtLanguages));
-        AddRow(table, "Pause:", Flow(_numPause, UiStyle.CreateLabel("s"), _chkRandomPause));
-        AddRow(table, "Limit:", Flow(_numMaxVideos, UiStyle.CreateLabel("Videos pro Lauf"), UiStyle.CreateHint("(0 = alle markierten)")));
+        AddRow(table, UiText.OutputFolderLabel, folderRow);
+        AddRow(table, UiText.QualityLabel, Flow(_cmbQuality, _chkSkip));
+        AddRow(table, UiText.SubtitlesLabel, Flow(_chkSubtitles, UiStyle.CreateLabel(UiText.LanguagesLabel), _txtLanguages));
+        AddRow(table, UiText.PauseLabel, Flow(_numPause, UiStyle.CreateLabel(UiText.SecondsUnit), _chkRandomPause));
+        AddRow(table, UiText.LimitLabel, Flow(_numMaxVideos, UiStyle.CreateLabel(UiText.VideosPerRun), UiStyle.CreateHint(UiText.LimitHint)));
 
-        _tips.SetToolTip(_chkSkip, "Videos überspringen, die schon im Zielordner liegen oder im Archiv stehen.");
-        _tips.SetToolTip(_txtLanguages, "z. B. ru,de,en – die erste Sprache gilt auch für die Titel in der Liste.");
-        _tips.SetToolTip(_numPause, "Mindestpause zwischen zwei Downloads, schützt vor YouTubes Drosselung.");
-        _tips.SetToolTip(_chkRandomPause, "Jede Pause wird zufällig um bis zu 50 % verlängert, damit kein gleichmäßiger Takt entsteht.");
+        _tips.SetToolTip(_chkSkip, UiText.TipSkipExisting);
+        _tips.SetToolTip(_txtLanguages, UiText.TipLanguages);
+        _tips.SetToolTip(_numPause, UiText.TipPause);
+        _tips.SetToolTip(_chkRandomPause, UiText.TipRandomPause);
 
         group.Controls.Add(table);
         return group;
@@ -261,20 +275,20 @@ internal sealed class MainForm : Form
 
         _cmbCookies.Items.AddRange(
         [
-            new Choice<string>(string.Empty, "keine"),
+            new Choice<string>(string.Empty, UiText.CookiesNone),
             new Choice<string>("firefox", "Firefox"),
-            new Choice<string>("chrome", "Chrome (meist gesperrt)"),
-            new Choice<string>("edge", "Edge (meist gesperrt)"),
-            new Choice<string>("brave", "Brave (meist gesperrt)"),
+            new Choice<string>("chrome", UiText.BrowserUsuallyLocked("Chrome")),
+            new Choice<string>("edge", UiText.BrowserUsuallyLocked("Edge")),
+            new Choice<string>("brave", UiText.BrowserUsuallyLocked("Brave")),
         ]);
 
-        AddRow(table, "Cookies aus Browser:", WithHint(Flow(_cmbCookies),
-            "Nur nötig, wenn YouTube eine Anmeldung verlangt („Sign in to confirm you're not a bot“). " +
-            "Firefox funktioniert; Chrome, Edge und Brave sperren ihre Cookies unter Windows meist."));
-        AddRow(table, "YouTube-API-Key:", WithHint(Flow(_txtApiKey, _chkShowKey),
-            "Optional – lädt Playlists und Titel schneller, für den Download nicht nötig."));
-        AddRow(table, "Werkzeuge:", WithHint(Flow(_lblTools, _btnTools),
-            $"yt-dlp, ffmpeg und Deno liegen in {_toolsDirectory}. yt-dlp wird einmal am Tag automatisch aktualisiert."));
+        foreach (var language in UiLanguages.All)
+            _cmbUiLanguage.Items.Add(new Choice<UiLanguage>(language, UiLanguages.NativeName(language)));
+
+        AddRow(table, UiText.UiLanguageLabel, WithHint(Flow(_cmbUiLanguage), UiText.UiLanguageHint));
+        AddRow(table, UiText.CookiesLabel, WithHint(Flow(_cmbCookies), UiText.CookiesHint));
+        AddRow(table, UiText.ApiKeyLabel, WithHint(Flow(_txtApiKey, _chkShowKey), UiText.ApiKeyHint));
+        AddRow(table, UiText.ToolsLabel, WithHint(Flow(_lblTools, _btnTools), UiText.ToolsHint(_toolsDirectory)));
         return table;
     }
 
@@ -294,7 +308,7 @@ internal sealed class MainForm : Form
 
         SetUpGrid();
 
-        var logGroup = NewGroup("Protokoll");
+        var logGroup = NewGroup(UiText.GroupLog);
         logGroup.AutoSize = false;
         logGroup.Controls.Add(_log);
 
@@ -343,12 +357,12 @@ internal sealed class MainForm : Form
         _grid.Columns.AddRange(_colCheck, _colNr, _colId, _colTitle, _colDuration, _colPlaylist, _colStatus);
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add("Im Browser öffnen", null, (_, _) => OpenSelectedInBrowser());
-        menu.Items.Add("IDs kopieren", null, (_, _) => CopySelected(r => r.Entry.Id));
-        menu.Items.Add("Links kopieren", null, (_, _) => CopySelected(r => r.Entry.Url));
+        menu.Items.Add(UiText.MenuOpenInBrowser, null, (_, _) => OpenSelectedInBrowser());
+        menu.Items.Add(UiText.MenuCopyIds, null, (_, _) => CopySelected(r => r.Entry.Id));
+        menu.Items.Add(UiText.MenuCopyLinks, null, (_, _) => CopySelected(r => r.Entry.Url));
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Markierte auswählen", null, (_, _) => SetCheckedForSelection(true));
-        menu.Items.Add("Markierte abwählen", null, (_, _) => SetCheckedForSelection(false));
+        menu.Items.Add(UiText.MenuCheckSelected, null, (_, _) => SetCheckedForSelection(true));
+        menu.Items.Add(UiText.MenuUncheckSelected, null, (_, _) => SetCheckedForSelection(false));
         _grid.ContextMenuStrip = menu;
     }
 
@@ -375,6 +389,7 @@ internal sealed class MainForm : Form
         _chkShowKey.CheckedChanged += (_, _) => _txtApiKey.UseSystemPasswordChar = !_chkShowKey.Checked;
         _btnTools.Click += async (_, _) => await SetUpToolsAsync();
         _btnToggleLog.Click += (_, _) => SetLogVisible(_split.Panel2Collapsed);
+        _cmbUiLanguage.SelectionChangeCommitted += (_, _) => SwitchUiLanguage();
 
         _btnAll.Click += (_, _) => SetChecked(_ => true);
         _btnNone.Click += (_, _) => SetChecked(_ => false);
@@ -411,7 +426,7 @@ internal sealed class MainForm : Form
         {
             _cts?.Cancel();
             _btnCancel.Enabled = false;
-            _log.AppendMessage("Wird abgebrochen…");
+            _log.AppendMessage(UiText.Cancelling);
         };
     }
 
@@ -421,13 +436,12 @@ internal sealed class MainForm : Form
         if (maxDistance > _split.Panel1MinSize)
             _split.SplitterDistance = Math.Clamp((int)(_split.Height * 0.75), _split.Panel1MinSize, maxDistance);
         RefreshTools();
-        _log.AppendMessage($"Werkzeug-Ordner: {_toolsDirectory}");
+        _log.AppendMessage(UiText.ToolsFolderLog(_toolsDirectory));
 
         if (!_tools.IsComplete)
         {
             var missing = string.Join(", ", MissingTools());
-            _log.AppendMessage($"Es fehlen: {missing}. Klicke unter „Einstellungen“ bei „Werkzeuge“ auf „Einrichten…“ – " +
-                               "sie werden automatisch heruntergeladen.");
+            _log.AppendMessage(UiText.ToolsMissingLog(missing));
             _tabs.SelectedTab = _tabSettings;
             return;
         }
@@ -436,7 +450,7 @@ internal sealed class MainForm : Form
         var today = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         if (_settings.LastToolUpdate != today)
         {
-            await RunBusyAsync("yt-dlp wird aktualisiert…", async ct =>
+            await RunBusyAsync(UiText.UpdatingYtDlp, async ct =>
             {
                 await UpdateYtDlpAsync(ct);
                 _settings.LastToolUpdate = today;
@@ -449,11 +463,22 @@ internal sealed class MainForm : Form
         }
     }
 
+    /// <summary>Saves the choice and closes the window; Program reopens it in the new language.</summary>
+    private void SwitchUiLanguage()
+    {
+        if (_busy || _cmbUiLanguage.SelectedItem is not Choice<UiLanguage> { Value: var language } || language == UiText.Language)
+            return;
+
+        _settings.UiLanguage = UiLanguages.Code(language);
+        LanguageChangeRequested = true;
+        Close();
+    }
+
     private void OnFormClosing(object? sender, FormClosingEventArgs e)
     {
         if (_busy)
         {
-            var answer = MessageBox.Show(this, "Es läuft noch ein Vorgang. Abbrechen und beenden?", AppTitle,
+            var answer = MessageBox.Show(this, UiText.ConfirmCloseWhileBusy, AppTitle,
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             // Close as soon as the running operation has stopped (see RunBusyAsync).
             e.Cancel = true;
@@ -479,11 +504,11 @@ internal sealed class MainForm : Form
 
         var parsed = InputParser.Parse(_txtInput.Text);
         foreach (var invalid in parsed.Invalid)
-            _log.AppendMessage($"Nicht erkannt: {invalid}");
+            _log.AppendMessage(UiText.NotRecognized(invalid));
 
         if (parsed.Items.Count == 0)
         {
-            MessageBox.Show(this, "Bitte mindestens einen YouTube-Link oder eine Video-/Playlist-ID eingeben.", AppTitle,
+            MessageBox.Show(this, UiText.EnterAtLeastOneLink, AppTitle,
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
@@ -492,11 +517,11 @@ internal sealed class MainForm : Form
         SaveSettings();
         RefreshTools();
 
-        await RunBusyAsync("Liste wird geladen…", async ct =>
+        await RunBusyAsync(UiText.LoadingList, async ct =>
         {
             var playlists = parsed.Items.Count(i => i.Kind != InputKind.Video);
             var videos = parsed.Items.Count - playlists;
-            _log.AppendMessage($"Lade Liste: {videos} Einzelvideo(s), {playlists} Playlist(s)/Kanäle…");
+            _log.AppendMessage(UiText.LoadingListLog(videos, playlists));
 
             var ytDlp = _tools.YtDlp is null ? null : new YtDlpClient(_tools);
             var log = new Progress<string>(_log.AppendMessage);
@@ -507,8 +532,7 @@ internal sealed class MainForm : Form
             FillGrid(entries);
             var existing = _rows.Count(r => r.Status == RowStatus.Existing);
             var unavailable = _rows.Count(r => r.Status == RowStatus.Unavailable);
-            _log.AppendMessage($"{entries.Count} Videos in der Liste, davon {existing} bereits vorhanden" +
-                               (unavailable > 0 ? $" und {unavailable} nicht verfügbar." : "."));
+            _log.AppendMessage(UiText.ListLoadedLog(entries.Count, existing, unavailable));
         });
     }
 
@@ -543,17 +567,17 @@ internal sealed class MainForm : Form
 
             if (row.Entry.Unavailable)
             {
-                SetStatus(row, RowStatus.Unavailable, "Nicht verfügbar");
+                SetStatus(row, RowStatus.Unavailable, UiText.StatusUnavailable);
                 SetChecked(row, false);
             }
             else if (library?.IsDownloaded(row.Entry.Id) == true)
             {
-                SetStatus(row, RowStatus.Existing, "Bereits vorhanden");
+                SetStatus(row, RowStatus.Existing, UiText.StatusExisting);
                 SetChecked(row, !_chkSkip.Checked);
             }
             else
             {
-                SetStatus(row, RowStatus.New, "Neu");
+                SetStatus(row, RowStatus.New, UiText.StatusNew);
                 SetChecked(row, true);
             }
         }
@@ -575,30 +599,30 @@ internal sealed class MainForm : Form
         RefreshTools();
         if (_tools.YtDlp is null || _tools.Ffmpeg is null)
         {
-            MessageBox.Show(this, "yt-dlp und ffmpeg werden benötigt. Klicke unter „Einstellungen“ bei „Werkzeuge“ auf „Einrichten…“.", AppTitle,
+            MessageBox.Show(this, UiText.NeedYtDlpAndFfmpeg, AppTitle,
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
         if (_tools.Deno is null)
-            _log.AppendMessage("Warnung: Deno fehlt – YouTube liefert dann oft nur eingeschränkte Formate.");
+            _log.AppendMessage(UiText.DenoMissingWarning);
 
         var targets = _rows.Where(IsChecked).ToList();
         if (targets.Count == 0)
         {
-            MessageBox.Show(this, "Keine Videos ausgewählt. Lade zuerst eine Liste und setze Häkchen.", AppTitle,
+            MessageBox.Show(this, UiText.NoVideosSelected, AppTitle,
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
         SaveSettings();
         foreach (var row in targets)
-            SetStatus(row, RowStatus.Waiting, "Wartet");
+            SetStatus(row, RowStatus.Waiting, UiText.StatusWaiting);
 
         int done = 0, failed = 0, skipped = 0;
         var limitReached = false;
         var cookieError = false;
-        await RunBusyAsync("Download läuft…", async ct =>
+        await RunBusyAsync(UiText.DownloadRunning, async ct =>
         {
             var library = VideoLibrary.Open(_settings.OutputFolder);
             var job = new DownloadJob(new YtDlpClient(_tools));
@@ -609,7 +633,7 @@ internal sealed class MainForm : Form
                 var row = targets[i];
                 if (_settings.SkipExisting && library.IsDownloaded(row.Entry.Id))
                 {
-                    SetStatus(row, RowStatus.Skipped, "Übersprungen (vorhanden)");
+                    SetStatus(row, RowStatus.Skipped, UiText.StatusSkipped);
                     SetChecked(row, false);
                     skipped++;
                     continue;
@@ -624,17 +648,17 @@ internal sealed class MainForm : Form
                 if (needsPause && _settings.PauseSeconds > 0)
                 {
                     var pause = PauseTiming.Next(_settings.PauseSeconds, _settings.RandomPause);
-                    _lblProgress.Text = $"Pause {pause.TotalSeconds:0} s…";
+                    _lblProgress.Text = UiText.PauseProgress(pause);
                     await Task.Delay(pause, ct);
                 }
 
                 needsPause = true;
-                _lblProgress.Text = $"{i + 1} von {targets.Count}: {row.Entry.Title ?? row.Entry.Id}";
+                _lblProgress.Text = UiText.ProgressOf(i + 1, targets.Count, row.Entry.Title ?? row.Entry.Id);
                 _progress.Style = ProgressBarStyle.Continuous;
                 _progress.Value = 0;
-                SetStatus(row, RowStatus.Running, "Startet…");
+                SetStatus(row, RowStatus.Running, UiText.StatusStarting);
                 ScrollIntoView(row);
-                _log.AppendMessage($"▶ {row.Entry.Id} – {row.Entry.Title ?? "(Titel unbekannt)"}");
+                _log.AppendMessage($"▶ {row.Entry.Id} – {TitleText(row.Entry)}");
 
                 var progress = new Progress<DownloadUpdate>(update => OnDownloadUpdate(row, update));
                 DownloadResult result;
@@ -644,7 +668,7 @@ internal sealed class MainForm : Form
                 }
                 catch (OperationCanceledException)
                 {
-                    SetStatus(row, RowStatus.Canceled, "Abgebrochen");
+                    SetStatus(row, RowStatus.Canceled, UiText.StatusCanceled);
                     throw;
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
@@ -655,21 +679,18 @@ internal sealed class MainForm : Form
                 if (result.Success)
                 {
                     done++;
-                    var subtitles = result.Subtitles.Count > 0
-                        ? " + Untertitel " + string.Join(", ", result.Subtitles.Select(s => s.Language))
-                        : string.Empty;
-                    SetStatus(row, RowStatus.Done, "Fertig" + subtitles);
+                    SetStatus(row, RowStatus.Done, UiText.StatusDone([.. result.Subtitles.Select(s => s.Language)]));
                     SetChecked(row, false);
                     row.Row.Cells[_colTitle.Index].Value = TitleText(row.Entry);
-                    _log.AppendMessage($"✔ {Path.GetFileName(result.MediaFile)} gespeichert.");
+                    _log.AppendMessage(UiText.SavedLog(Path.GetFileName(result.MediaFile)!));
                 }
                 else
                 {
                     failed++;
-                    SetStatus(row, RowStatus.Failed, "Fehler: " + result.Error);
+                    SetStatus(row, RowStatus.Failed, UiText.StatusFailed(result.Error));
                     _log.AppendMessage($"✖ {row.Entry.Id}: {result.Error}");
                     if (result.Error is not null && YtDlpOutput.GetHint(result.Error) is { } hint)
-                        _log.AppendMessage("  Tipp: " + hint);
+                        _log.AppendMessage("  " + UiText.Tip(hint));
 
                     // Every further video would fail the same way.
                     if (result.Error is not null && YtDlpOutput.IsCookieError(result.Error))
@@ -683,14 +704,13 @@ internal sealed class MainForm : Form
 
         // Rows that were still waiting when the user cancelled.
         foreach (var row in targets.Where(r => r.Status == RowStatus.Waiting))
-            SetStatus(row, RowStatus.New, "Neu");
+            SetStatus(row, RowStatus.New, UiText.StatusNew);
 
-        _log.AppendMessage($"Fertig: {done} heruntergeladen, {failed} Fehler, {skipped} übersprungen.");
+        _log.AppendMessage(UiText.FinishedLog(done, failed, skipped));
         if (limitReached)
         {
             var remaining = targets.Count(r => r.Status == RowStatus.New);
-            _log.AppendMessage($"Limit von {_settings.MaxVideosPerRun} Videos erreicht. Noch {remaining} markiert – " +
-                               "zum Weitermachen erneut auf „Herunterladen“ klicken.");
+            _log.AppendMessage(UiText.LimitReachedLog(_settings.MaxVideosPerRun, remaining));
         }
         UpdateCount();
 
@@ -700,12 +720,9 @@ internal sealed class MainForm : Form
 
     private void OfferToTurnOffCookies()
     {
-        _log.AppendMessage("Download gestoppt: Die Cookies lassen sich nicht aus dem Browser lesen.");
-        var answer = MessageBox.Show(this,
-            $"Die Cookies aus „{_cmbCookies.Text}“ lassen sich nicht lesen, deshalb wurde der Download gestoppt.\n\n" +
-            "Chrome, Edge und Brave sperren ihre Cookies unter Windows, solange der Browser läuft, und verschlüsseln " +
-            "sie so, dass yt-dlp sie nicht lesen kann. Cookies sind nur nötig, wenn YouTube eine Anmeldung verlangt.\n\n" +
-            "Cookies ausschalten und danach einfach erneut auf „Herunterladen“ klicken?",
+        _log.AppendMessage(UiText.CookieStopLog);
+        var browser = (_cmbCookies.SelectedItem as Choice<string>)?.Value ?? _cmbCookies.Text;
+        var answer = MessageBox.Show(this, UiText.CookieStopQuestion(CultureInfo.InvariantCulture.TextInfo.ToTitleCase(browser)),
             AppTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         if (answer != DialogResult.Yes)
             return;
@@ -713,7 +730,7 @@ internal sealed class MainForm : Form
         _cmbCookies.SelectedIndex = 0;
         ReadSettingsFromControls();
         SaveSettings();
-        _log.AppendMessage("Cookies ausgeschaltet.");
+        _log.AppendMessage(UiText.CookiesTurnedOff);
     }
 
     private void OnDownloadUpdate(VideoRow row, DownloadUpdate update)
@@ -727,7 +744,7 @@ internal sealed class MainForm : Form
         if (update.Percent is { } percent)
         {
             _progress.Value = Math.Clamp((int)Math.Round(percent), 0, 100);
-            SetStatus(row, RowStatus.Running, $"{update.Phase ?? "Lädt"} {percent:0} %");
+            SetStatus(row, RowStatus.Running, $"{update.Phase ?? UiText.PhaseDownloading} {percent:0} %");
         }
         else if (update.Phase is not null)
         {
@@ -740,12 +757,12 @@ internal sealed class MainForm : Form
     private void RefreshTools()
     {
         _tools = ToolLocator.Locate(_toolsDirectory, AppContext.BaseDirectory);
-        static string Mark(string? path) => path is null ? "✗ fehlt" : "✓";
+        static string Mark(string? path) => path is null ? UiText.ToolMissing : "✓";
         _lblTools.Text = $"yt-dlp {Mark(_tools.YtDlp)}    ffmpeg {Mark(_tools.Ffmpeg)}    Deno {Mark(_tools.Deno)}";
         _lblTools.ForeColor = _tools.IsComplete ? UiStyle.SuccessText : UiStyle.DangerText;
-        _btnTools.Text = _tools.IsComplete ? "Aktualisieren" : "Einrichten…";
+        _btnTools.Text = _tools.IsComplete ? UiText.ToolsUpdate : UiText.ToolsSetUp;
         UiStyle.SetIcon(_btnTools, _tools.IsComplete ? Glyph.Refresh : Glyph.Download, DeviceDpi);
-        _tabSettings.Text = _tools.IsComplete ? "Einstellungen" : "Einstellungen – Werkzeuge fehlen";
+        _tabSettings.Text = _tools.IsComplete ? UiText.TabSettings : UiText.TabSettingsToolsMissing;
         _tabSettings.ImageKey = _tools.IsComplete ? "settings" : "warning";
     }
 
@@ -767,16 +784,13 @@ internal sealed class MainForm : Form
         if (missing.Count > 0)
         {
             var answer = MessageBox.Show(this,
-                $"Folgende Werkzeuge werden von GitHub heruntergeladen: {string.Join(", ", missing)}.\n\n" +
-                $"Zielordner: {_toolsDirectory}\n" +
-                (_tools.Ffmpeg is null ? "ffmpeg ist ca. 190 MB groß.\n" : string.Empty) +
-                "\nFortfahren?",
+                UiText.ToolsDownloadQuestion(string.Join(", ", missing), _toolsDirectory, _tools.Ffmpeg is null),
                 AppTitle, MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             if (answer != DialogResult.OK)
                 return;
         }
 
-        await RunBusyAsync("Werkzeuge…", async ct =>
+        await RunBusyAsync(UiText.ToolsBusy, async ct =>
         {
             if (missing.Count == 0)
             {
@@ -793,30 +807,29 @@ internal sealed class MainForm : Form
                 _progress.Style = p.Percent is null ? ProgressBarStyle.Marquee : ProgressBarStyle.Continuous;
                 if (p.Percent is { } percent)
                     _progress.Value = Math.Clamp((int)percent, 0, 100);
-                _lblProgress.Text = $"{p.Tool}: {p.Received / 1048576.0:0.0} MB" +
-                                    (p.Total is > 0 ? $" von {p.Total.Value / 1048576.0:0.0} MB" : string.Empty);
+                _lblProgress.Text = UiText.ToolProgress(p.Tool, p.Received, p.Total);
             });
 
             if (_tools.YtDlp is null)
             {
-                _log.AppendMessage("yt-dlp wird heruntergeladen…");
+                _log.AppendMessage(UiText.DownloadingTool("yt-dlp"));
                 await installer.InstallYtDlpAsync(_toolsDirectory, progress, ct);
             }
 
             if (_tools.Ffmpeg is null)
             {
-                _log.AppendMessage("ffmpeg wird heruntergeladen…");
+                _log.AppendMessage(UiText.DownloadingTool("ffmpeg"));
                 await installer.InstallFfmpegAsync(_toolsDirectory, progress, ct);
             }
 
             if (_tools.Deno is null)
             {
-                _log.AppendMessage("Deno wird heruntergeladen…");
+                _log.AppendMessage(UiText.DownloadingTool("Deno"));
                 await installer.InstallDenoAsync(_toolsDirectory, progress, ct);
             }
 
             RefreshTools();
-            _log.AppendMessage(_tools.IsComplete ? "Alle Werkzeuge sind eingerichtet." : "Es fehlen noch Werkzeuge.");
+            _log.AppendMessage(_tools.IsComplete ? UiText.AllToolsReady : UiText.ToolsStillMissing);
             await LogVersionAsync();
         });
     }
@@ -826,7 +839,7 @@ internal sealed class MainForm : Form
         if (_tools.YtDlp is null)
             return;
 
-        _log.AppendMessage("Prüfe auf yt-dlp-Updates…");
+        _log.AppendMessage(UiText.CheckingForUpdates("yt-dlp"));
         var log = new Progress<string>(line => _log.AppendLine("    " + line));
         await new YtDlpClient(_tools).UpdateAsync(line => ((IProgress<string>)log).Report(line), ct);
         await LogVersionAsync();
@@ -838,7 +851,7 @@ internal sealed class MainForm : Form
         if (_tools.Deno is null || !IsInside(_tools.Deno, _toolsDirectory))
             return;
 
-        _log.AppendMessage("Prüfe auf Deno-Updates…");
+        _log.AppendMessage(UiText.CheckingForUpdates("Deno"));
         var log = new Progress<string>(line => _log.AppendLine("    " + line));
         await ProcessRunner.RunAsync(_tools.Deno, ["upgrade"], line => ((IProgress<string>)log).Report(line), _tools.CreateEnvironment(), ct);
     }
@@ -850,11 +863,11 @@ internal sealed class MainForm : Form
         try
         {
             var version = await new YtDlpClient(_tools).GetVersionAsync();
-            _log.AppendMessage($"yt-dlp Version {version}");
+            _log.AppendMessage(UiText.YtDlpVersion(version));
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException)
         {
-            _log.AppendMessage("yt-dlp lässt sich nicht starten: " + ex.Message);
+            _log.AppendMessage(UiText.YtDlpCannotStart(ex.Message));
         }
     }
 
@@ -875,11 +888,11 @@ internal sealed class MainForm : Form
         }
         catch (OperationCanceledException)
         {
-            _log.AppendMessage("Abgebrochen.");
+            _log.AppendMessage(UiText.Cancelled);
         }
         catch (Exception ex)
         {
-            _log.AppendMessage("Fehler: " + ex.Message);
+            _log.AppendMessage(UiText.Error(ex.Message));
         }
         finally
         {
@@ -900,7 +913,7 @@ internal sealed class MainForm : Form
         foreach (var control in new Control[]
                  {
                      _txtInput, _btnLoad, _btnClearInput, _txtFolder, _btnBrowse, _cmbQuality, _cmbCookies,
-                     _chkSubtitles, _chkSkip, _numPause, _chkRandomPause, _numMaxVideos, _txtApiKey, _btnTools, _btnAll, _btnNone, _btnOnlyNew, _btnDownload,
+                     _chkSubtitles, _chkSkip, _numPause, _chkRandomPause, _numMaxVideos, _txtApiKey, _btnTools, _cmbUiLanguage, _btnAll, _btnNone, _btnOnlyNew, _btnDownload,
                  })
         {
             control.Enabled = !busy;
@@ -930,13 +943,14 @@ internal sealed class MainForm : Form
         _chkRandomPause.Checked = _settings.RandomPause;
         _numMaxVideos.Value = _settings.MaxVideosPerRun;
         _txtApiKey.Text = _settings.ApiKey;
+        _cmbUiLanguage.SelectedItem = _cmbUiLanguage.Items.Cast<Choice<UiLanguage>>().First(c => c.Value == UiText.Language);
         SetLogVisible(_settings.ShowLog);
     }
 
     private void SetLogVisible(bool visible)
     {
         _split.Panel2Collapsed = !visible;
-        _btnToggleLog.Text = visible ? "Protokoll ausblenden" : "Protokoll anzeigen";
+        _btnToggleLog.Text = visible ? UiText.HideLog : UiText.ShowLog;
         UiStyle.SetIcon(_btnToggleLog, visible ? Glyph.ChevronDown : Glyph.ChevronUp, DeviceDpi);
         _settings.ShowLog = visible;
     }
@@ -966,7 +980,7 @@ internal sealed class MainForm : Form
         }
         catch (IOException ex)
         {
-            _log.AppendMessage("Einstellungen konnten nicht gespeichert werden: " + ex.Message);
+            _log.AppendMessage(UiText.SettingsNotSaved(ex.Message));
         }
     }
 
@@ -976,7 +990,7 @@ internal sealed class MainForm : Form
     {
         using var dialog = new FolderBrowserDialog
         {
-            Description = "Ordner für die Videos wählen",
+            Description = UiText.ChooseFolderTitle,
             UseDescriptionForTitle = true,
             ShowNewFolderButton = true,
         };
@@ -1019,7 +1033,7 @@ internal sealed class MainForm : Form
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            MessageBox.Show(this, "Der Zielordner kann nicht angelegt werden:\n" + ex.Message, AppTitle,
+            MessageBox.Show(this, UiText.FolderCannotBeCreated(ex.Message), AppTitle,
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
         }
@@ -1109,8 +1123,8 @@ internal sealed class MainForm : Form
         var selected = _rows.Count(IsChecked);
         var existing = _rows.Count(r => r.Status is RowStatus.Existing or RowStatus.Done or RowStatus.Skipped);
         _lblCount.Text = _rows.Count == 0
-            ? "Noch keine Liste geladen."
-            : $"{_rows.Count} Videos · {selected} ausgewählt · {existing} vorhanden";
+            ? UiText.NoListLoaded
+            : UiText.ListSummary(_rows.Count, selected, existing);
     }
 
     private void OpenSelectedInBrowser()
@@ -1128,7 +1142,7 @@ internal sealed class MainForm : Form
 
     // ------------------------------------------------------------------ Small helpers
 
-    private static string TitleText(VideoEntry entry) => entry.Title ?? "(Titel unbekannt)";
+    private static string TitleText(VideoEntry entry) => entry.Title ?? UiText.TitleUnknown;
 
     internal static string FormatDuration(TimeSpan? duration) => duration is not { } d
         ? string.Empty
@@ -1186,11 +1200,13 @@ internal sealed class MainForm : Form
     }
 
     /// <summary>The control line with a hint below it (instead of beside it, where it would be cut off in narrow windows).</summary>
-    private static TableLayoutPanel WithHint(Control line, string hint)
+    private TableLayoutPanel WithHint(Control line, string hint)
     {
         var panel = new TableLayoutPanel { AutoSize = true, ColumnCount = 1, RowCount = 2, Dock = DockStyle.Fill, Margin = Padding.Empty };
         panel.Controls.Add(line, 0, 0);
-        panel.Controls.Add(UiStyle.CreateHint(hint), 0, 1);
+        var label = UiStyle.CreateHint(hint);
+        label.MaximumSize = new Size(LogicalToDeviceUnits(620), 0); // wraps long hints
+        panel.Controls.Add(label, 0, 1);
         return panel;
     }
 

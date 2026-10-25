@@ -78,7 +78,7 @@ public sealed class DownloadJob
             {
                 // Subtitles are tiny; only video/audio streams move the progress bar.
                 if (p.Percent is { } percent && !inSubtitleStream)
-                    progress.Report(new DownloadUpdate(Percent: percent, Phase: mediaStream > 1 ? $"Lädt Teil {mediaStream}" : "Lädt"));
+                    progress.Report(new DownloadUpdate(Percent: percent, Phase: mediaStream > 1 ? UiText.PhaseDownloadingPart(mediaStream) : UiText.PhaseDownloading));
                 return;
             }
 
@@ -101,11 +101,11 @@ public sealed class DownloadJob
         if (mediaFile is null)
         {
             DeleteTempFiles(tempFolder, entry.Id, keepPartial: true);
-            var error = lastError ?? $"yt-dlp beendet mit Code {exitCode}, keine Videodatei gefunden.";
+            var error = lastError ?? UiText.YtDlpExitedWithoutVideo(exitCode);
             return DownloadResult.Failed(error);
         }
 
-        progress.Report(new DownloadUpdate(Phase: "Dateien schreiben…"));
+        progress.Report(new DownloadUpdate(Phase: UiText.PhaseWritingFiles));
         using var infoDocument = ReadYtDlpInfo(tempFolder, entry.Id);
         JsonElement? info = infoDocument?.RootElement;
 
@@ -123,7 +123,7 @@ public sealed class DownloadJob
         DeleteTempFiles(tempFolder, entry.Id, keepPartial: false);
 
         if (exitCode != 0 && lastError is not null)
-            progress.Report(new DownloadUpdate(LogLine: $"Hinweis: {lastError}"));
+            progress.Report(new DownloadUpdate(LogLine: UiText.Note(lastError)));
 
         return new DownloadResult(true, null, mediaFile, subtitles);
     }
@@ -170,7 +170,7 @@ public sealed class DownloadJob
                 var segments = SubtitleParser.Parse(File.ReadAllText(file), Path.GetExtension(file));
                 if (segments.Count == 0)
                 {
-                    progress.Report(new DownloadUpdate(LogLine: $"Untertitel {language}: leer, übersprungen."));
+                    progress.Report(new DownloadUpdate(LogLine: UiText.SubtitleEmpty(language)));
                     continue;
                 }
 
@@ -182,16 +182,16 @@ public sealed class DownloadJob
                 var automatic = !VideoInfoFile.IsManualSubtitle(info, language);
                 result.Add(new SubtitleInfo(language, automatic, jsonName, srtName));
                 progress.Report(new DownloadUpdate(LogLine:
-                    $"Untertitel {language} ({(automatic ? "automatisch" : "hochgeladen")}): {segments.Count} Abschnitte → {jsonName}"));
+                    UiText.SubtitleSaved(language, automatic, segments.Count, jsonName)));
             }
             catch (Exception ex) when (ex is JsonException or IOException or NotSupportedException)
             {
-                progress.Report(new DownloadUpdate(LogLine: $"Untertitel {language} konnten nicht umgewandelt werden: {ex.Message}"));
+                progress.Report(new DownloadUpdate(LogLine: UiText.SubtitleNotConverted(language, ex.Message)));
             }
         }
 
         if (result.Count == 0)
-            progress.Report(new DownloadUpdate(LogLine: "Keine Untertitel in den gewählten Sprachen gefunden."));
+            progress.Report(new DownloadUpdate(LogLine: UiText.NoSubtitlesFound));
 
         return result;
     }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -21,7 +22,14 @@ internal static class CommandLine
     {
         ConnectConsole();
 
+        // The API key is stored encrypted; loading needs the Windows protector. Nothing is saved from here.
+        var settings = new SettingsStore(new DpapiSecretProtector()).Load();
+        UiLanguages.Apply(UiLanguages.Resolve(settings.UiLanguage, CultureInfo.CurrentUICulture));
+
         var parsed = CliArguments.Parse(args);
+        if (parsed.Options?.Language is { } language)
+            UiLanguages.Apply(language);
+
         if (parsed.Options is null)
         {
             Console.Error.WriteLine(parsed.Error);
@@ -44,8 +52,6 @@ internal static class CommandLine
         using var http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
         http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Videolader", "1.0"));
 
-        // The API key is stored encrypted; loading needs the Windows protector. Nothing is saved from here.
-        var settings = new SettingsStore(new DpapiSecretProtector()).Load();
         var runner = new CliRunner(
             http,
             settings,

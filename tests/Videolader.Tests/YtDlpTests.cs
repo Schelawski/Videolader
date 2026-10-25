@@ -140,7 +140,7 @@ public class YtDlpHintTests
     public void Cookie_errors_are_recognized_and_explained(string error)
     {
         Assert.True(YtDlpOutput.IsCookieError(error));
-        Assert.Contains("Cookies", YtDlpOutput.GetHint(error));
+        Assert.NotNull(YtDlpOutput.GetHint(error));
     }
 
     [Theory]

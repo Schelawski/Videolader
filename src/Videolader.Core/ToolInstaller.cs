@@ -59,7 +59,7 @@ public sealed class ToolInstaller(HttpClient http)
         foreach (var fileName in fileNames)
         {
             var entry = archive.Entries.FirstOrDefault(e => e.Name.Equals(fileName, StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidDataException($"{fileName} ist nicht im heruntergeladenen Archiv enthalten.");
+                ?? throw new InvalidDataException(UiText.FileNotInArchive(fileName));
 
             var target = Path.Combine(targetDirectory, fileName);
             var temp = target + ".extract";

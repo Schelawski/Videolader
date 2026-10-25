@@ -42,7 +42,7 @@ public sealed class CliRunner(
         }
         catch (OperationCanceledException)
         {
-            _log.WriteLine("Abgebrochen.");
+            _log.WriteLine(UiText.Cancelled);
             return ExitCancelled;
         }
     }
@@ -53,22 +53,22 @@ public sealed class CliRunner(
 
         var parsed = InputParser.Parse(string.Join('\n', options.Inputs));
         foreach (var invalid in parsed.Invalid)
-            _log.WriteLine($"Nicht erkannt: {invalid}");
+            _log.WriteLine(UiText.NotRecognized(invalid));
         if (parsed.Items.Count == 0)
         {
-            stderr.WriteLine("Keine gültigen Links oder IDs.");
+            stderr.WriteLine(UiText.CliNoValidLinks);
             return ExitBadInput;
         }
 
         var tools = ToolLocator.Locate(toolsDirectory, appDirectory);
         if (tools.YtDlp is null || (!options.ListOnly && tools.Ffmpeg is null))
         {
-            stderr.WriteLine("yt-dlp und ffmpeg fehlen. Einmalig einrichten mit: Videolader.exe setup");
+            stderr.WriteLine(UiText.CliToolsMissing);
             return ExitToolsMissing;
         }
 
         if (!options.ListOnly && tools.Deno is null)
-            _log.WriteLine("Warnung: Deno fehlt – YouTube liefert dann oft nur eingeschränkte Formate (Videolader.exe setup).");
+            _log.WriteLine(UiText.CliDenoMissing);
 
         var folder = settings.OutputFolder;
         if (string.IsNullOrWhiteSpace(folder))
@@ -80,9 +80,9 @@ public sealed class CliRunner(
         var language = SubtitleLanguageList.Split(settings.SubtitleLanguages).FirstOrDefault();
         var resolver = new VideoResolver(http, new YtDlpClient(tools), settings.ApiKey, settings.CookiesBrowser, log, language);
 
-        _log.WriteLine("Lade Liste…");
+        _log.WriteLine(UiText.CliLoadingList);
         var entries = await resolver.ResolveAsync(parsed.Items, ct).ConfigureAwait(false);
-        _log.WriteLine($"{entries.Count} Video(s) gefunden. Zielordner: {folder}");
+        _log.WriteLine(UiText.CliVideosFound(entries.Count, folder));
 
         var skipExisting = settings.SkipExisting && !options.NoSkip;
         var job = new DownloadJob(new YtDlpClient(tools));
@@ -127,7 +127,7 @@ public sealed class CliRunner(
                 await Task.Delay(PauseTiming.Next(settings.PauseSeconds, settings.RandomPause), ct).ConfigureAwait(false);
             needsPause = true;
 
-            _log.WriteLine($"[{i + 1}/{entries.Count}] {entry.Id} – {entry.Title ?? "(Titel unbekannt)"}");
+            _log.WriteLine($"[{i + 1}/{entries.Count}] {entry.Id} – {entry.Title ?? UiText.TitleUnknown}");
 
             var progress = new SyncProgress<DownloadUpdate>(update =>
             {
@@ -148,24 +148,21 @@ public sealed class CliRunner(
             if (result.Success)
             {
                 done++;
-                var subtitles = result.Subtitles.Count > 0
-                    ? " + Untertitel " + string.Join(", ", result.Subtitles.Select(s => s.Language))
-                    : string.Empty;
-                _log.WriteLine($"    fertig: {Path.GetFileName(result.MediaFile)}{subtitles}");
+                _log.WriteLine("    " + UiText.CliDone(Path.GetFileName(result.MediaFile)!, [.. result.Subtitles.Select(s => s.Language)]));
                 Emit(entry, "downloaded", file: result.MediaFile);
             }
             else
             {
                 failed++;
-                _log.WriteLine($"    Fehler: {result.Error}");
+                _log.WriteLine("    " + UiText.Error(result.Error ?? string.Empty));
                 if (result.Error is not null && YtDlpOutput.GetHint(result.Error) is { } hint)
-                    _log.WriteLine("    Tipp: " + hint);
+                    _log.WriteLine("    " + UiText.Tip(hint));
                 Emit(entry, "failed", error: result.Error);
 
                 // Every further video would fail the same way.
                 if (result.Error is not null && YtDlpOutput.IsCookieError(result.Error))
                 {
-                    _log.WriteLine("Gestoppt: Die Cookies lassen sich nicht lesen. Ohne --cookies oder mit --cookies firefox erneut versuchen.");
+                    _log.WriteLine(UiText.CliCookieStop);
                     break;
                 }
             }
@@ -173,13 +170,13 @@ public sealed class CliRunner(
 
         if (options.ListOnly)
         {
-            _log.WriteLine("Nur Liste: es wurde nichts heruntergeladen.");
+            _log.WriteLine(UiText.CliListOnly);
             return ExitOk;
         }
 
-        _log.WriteLine($"Fertig: {done} heruntergeladen, {failed} Fehler, {skipped} übersprungen, {unavailable} nicht verfügbar.");
+        _log.WriteLine(UiText.CliFinished(done, failed, skipped, unavailable));
         if (limitReached)
-            _log.WriteLine($"Limit von {settings.MaxVideosPerRun} Videos erreicht, noch {remaining} offen – derselbe Aufruf macht weiter.");
+            _log.WriteLine(UiText.CliLimitReached(settings.MaxVideosPerRun, remaining));
 
         return failed > 0 ? ExitFailed : ExitOk;
     }
@@ -205,36 +202,36 @@ public sealed class CliRunner(
         {
             if (tools.YtDlp is null)
             {
-                _log.WriteLine("yt-dlp wird heruntergeladen…");
+                _log.WriteLine(UiText.DownloadingTool("yt-dlp"));
                 await installer.InstallYtDlpAsync(toolsDirectory, progress, ct).ConfigureAwait(false);
             }
 
             if (tools.Ffmpeg is null)
             {
-                _log.WriteLine("ffmpeg wird heruntergeladen…");
+                _log.WriteLine(UiText.DownloadingTool("ffmpeg"));
                 await installer.InstallFfmpegAsync(toolsDirectory, progress, ct).ConfigureAwait(false);
             }
 
             if (tools.Deno is null)
             {
-                _log.WriteLine("Deno wird heruntergeladen…");
+                _log.WriteLine(UiText.DownloadingTool("Deno"));
                 await installer.InstallDenoAsync(toolsDirectory, progress, ct).ConfigureAwait(false);
             }
         }
         catch (Exception ex) when (ex is HttpRequestException or IOException or UnauthorizedAccessException)
         {
-            stderr.WriteLine("Einrichten fehlgeschlagen: " + ex.Message);
+            stderr.WriteLine(UiText.CliSetupFailed(ex.Message));
             return ExitFailed;
         }
 
         tools = ToolLocator.Locate(toolsDirectory, appDirectory);
         if (tools.YtDlp is not null)
         {
-            _log.WriteLine("Prüfe auf yt-dlp-Updates…");
+            _log.WriteLine(UiText.CheckingForUpdates("yt-dlp"));
             await new YtDlpClient(tools).UpdateAsync(line => _log.WriteLine("    " + line), ct).ConfigureAwait(false);
         }
 
-        _log.WriteLine(tools.IsComplete ? "Alle Werkzeuge sind eingerichtet." : "Es fehlen noch Werkzeuge.");
+        _log.WriteLine(tools.IsComplete ? UiText.AllToolsReady : UiText.ToolsStillMissing);
         return tools.IsComplete ? ExitOk : ExitFailed;
     }
 
@@ -265,21 +262,13 @@ public sealed class CliRunner(
         if (!_json)
         {
             if (status is "unavailable" or "skipped" or "exists" or "new")
-                _log.WriteLine($"{StatusText(status),-14} {entry.Id} – {entry.Title}");
+                _log.WriteLine($"{UiText.CliStatus(status),-14} {entry.Id} – {entry.Title}");
             return;
         }
 
         stdout.WriteLine(JsonSerializer.Serialize(
             new { id = entry.Id, status, title = entry.Title, file, error }, JsonLineOptions));
     }
-
-    private static string StatusText(string status) => status switch
-    {
-        "unavailable" => "nicht verfügbar",
-        "skipped" => "übersprungen",
-        "exists" => "vorhanden",
-        _ => "neu",
-    };
 
     /// <summary><see cref="Progress{T}"/> posts to the thread pool; in a console program messages must stay in order.</summary>
     private sealed class SyncProgress<T>(Action<T> handler) : IProgress<T>

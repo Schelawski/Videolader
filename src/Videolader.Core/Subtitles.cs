@@ -30,7 +30,7 @@ public static partial class SubtitleParser
         {
             "json3" => ParseJson3(content),
             "vtt" => ParseVtt(content),
-            _ => throw new NotSupportedException($"Untertitelformat {extension} wird nicht unterstützt."),
+            _ => throw new NotSupportedException(UiText.SubtitleFormatNotSupported(extension)),
         };
 
     /// <summary>YouTube's own format: <c>{"events":[{"tStartMs":…,"dDurationMs":…,"segs":[{"utf8":"…"}]}]}</c>.</summary>

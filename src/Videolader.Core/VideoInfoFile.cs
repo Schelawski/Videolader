@@ -56,7 +56,7 @@ public static class VideoInfoFile
     public static string Serialize(VideoInfo info) => JsonSerializer.Serialize(info, JsonOptions);
 
     public static VideoInfo Deserialize(string json) =>
-        JsonSerializer.Deserialize<VideoInfo>(json, JsonOptions) ?? throw new JsonException("Leere Datei.");
+        JsonSerializer.Deserialize<VideoInfo>(json, JsonOptions) ?? throw new JsonException(UiText.EmptyFile);
 
     /// <summary>Builds the compact metadata from yt-dlp's full info JSON (may be null if it is missing).</summary>
     public static VideoInfo Create(

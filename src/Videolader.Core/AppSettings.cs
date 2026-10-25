@@ -50,6 +50,9 @@ public sealed class AppSettings
     /// <summary>Stop after this many download attempts per run (0 = no limit). Skipped videos do not count.</summary>
     public int MaxVideosPerRun { get; set; }
 
+    /// <summary>Interface language ("en", "de", "ru"); empty = from the Windows display language.</summary>
+    public string UiLanguage { get; set; } = string.Empty;
+
     /// <summary>Show the log below the video list.</summary>
     public bool ShowLog { get; set; } = true;
 
@@ -76,6 +79,7 @@ public sealed class AppSettings
             Quality = VideoQuality.Max1080;
         PauseSeconds = Math.Clamp(PauseSeconds, 0, MaxPauseSeconds);
         MaxVideosPerRun = Math.Clamp(MaxVideosPerRun, 0, MaxVideosPerRunLimit);
+        UiLanguage = UiLanguages.FromCode(UiLanguage) is { } language ? UiLanguages.Code(language) : string.Empty;
         LastInput ??= string.Empty;
         LastToolUpdate ??= string.Empty;
     }
