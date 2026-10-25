@@ -93,7 +93,7 @@ dann hat die Liste mehr Platz.
 |---|---|
 | Zielordner | Hier landen die Videos. Standard: `Videos\Videolader`. |
 | Qualität | Beste, bis 1080p (Standard), bis 720p, bis 480p oder nur Audio. |
-| Cookies aus Browser | Nur nötig, wenn YouTube „Sign in to confirm you're not a bot“ meldet. Firefox funktioniert am zuverlässigsten, denn Chrome/Edge verschlüsseln ihre Cookies unter Windows so, dass yt-dlp sie oft nicht lesen kann. |
+| Cookies aus Browser | Nur nötig, wenn YouTube „Sign in to confirm you're not a bot“ meldet. Firefox funktioniert am zuverlässigsten, denn Chrome, Edge und Brave sperren ihre Cookies unter Windows, solange der Browser läuft, und verschlüsseln sie so, dass yt-dlp sie meist nicht lesen kann („Could not copy Chrome cookie database“). Dann stoppt der Download sofort und Videolader bietet an, die Cookies auszuschalten. |
 | Untertitel / Sprachen | z. B. `ru` oder `ru,de,en`. Hochgeladene Untertitel haben Vorrang vor automatischen. Achtung: Bei automatischen Untertiteln liefert YouTube für fremde Sprachen maschinelle Übersetzungen. |
 | Pause | Sekunden zwischen zwei Downloads, schützt vor YouTubes Drosselung (HTTP 429). Mit „zufällig bis +50 %“ (Standard) ist der eingestellte Wert die Mindestpause, jede Pause wird zufällig um bis zu die Hälfte verlängert (45 s → 45 bis 67 s), damit kein gleichmäßiger Takt entsteht. Gilt auch für die Kommandozeile. |
 | Limit | Höchstens so viele Videos pro Lauf (0 = alle). Bei langen Listen z. B. 50 und beim nächsten Mal einfach weitermachen: Fertige Videos stehen im Archiv und werden übersprungen. |

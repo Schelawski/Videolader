@@ -63,7 +63,7 @@ public static class CliArguments
           --no-subs            keine Untertitel
           --limit <N>          höchstens N Videos pro Lauf (0 = alle)
           --pause <Sekunden>   Pause zwischen zwei Downloads
-          --cookies <Browser>  firefox, chrome, edge oder brave
+          --cookies <Browser>  firefox, chrome, edge oder brave (nur firefox klappt zuverlässig)
           --no-skip            auch bereits vorhandene Videos erneut laden
           --list               nur auflisten, nichts herunterladen
           --json               pro Video eine JSON-Zeile auf stdout, Meldungen auf stderr

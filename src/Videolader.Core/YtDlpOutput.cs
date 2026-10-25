@@ -70,19 +70,32 @@ public static class YtDlpOutput
     /// <summary>Well-known yt-dlp errors translated into a hint for the user.</summary>
     public static string? GetHint(string error)
     {
+        if (IsCookieError(error))
+            return "Die Cookies lassen sich nicht aus dem Browser lesen. Chrome, Edge und Brave sperren sie unter Windows, " +
+                   "solange der Browser läuft, und verschlüsseln sie so, dass yt-dlp sie nicht lesen kann. " +
+                   "Stell die Cookies auf „keine“ (meist gar nicht nötig) oder nimm Firefox.";
         if (error.Contains("Sign in to confirm", StringComparison.OrdinalIgnoreCase))
-            return "YouTube verlangt eine Anmeldung. Wähle unter „Cookies“ einen Browser, in dem du bei YouTube angemeldet bist (Firefox funktioniert am zuverlässigsten).";
+            return "YouTube verlangt eine Anmeldung. Wähle unter „Einstellungen“ bei „Cookies aus Browser“ einen Browser, in dem du bei YouTube angemeldet bist (Firefox funktioniert, Chrome/Edge/Brave meist nicht).";
         if (error.Contains("HTTP Error 429", StringComparison.OrdinalIgnoreCase))
             return "YouTube drosselt die Anfragen (429). Warte etwas und erhöhe die Pause zwischen den Downloads.";
         if (error.Contains("Private video", StringComparison.OrdinalIgnoreCase))
             return "Das Video ist privat.";
         if (error.Contains("JavaScript runtime", StringComparison.OrdinalIgnoreCase) ||
             error.Contains("n challenge", StringComparison.OrdinalIgnoreCase))
-            return "Deno fehlt oder ist veraltet. Klicke auf „Werkzeuge einrichten“.";
+            return "Deno fehlt oder ist veraltet. Richte die Werkzeuge neu ein (Einstellungen → Werkzeuge).";
         if (error.Contains("ffmpeg", StringComparison.OrdinalIgnoreCase))
-            return "ffmpeg fehlt. Klicke auf „Werkzeuge einrichten“.";
+            return "ffmpeg fehlt. Richte die Werkzeuge ein (Einstellungen → Werkzeuge).";
         return null;
     }
+
+    /// <summary>
+    /// The browser cookies could not be read (Chromium browsers on Windows lock and encrypt them).
+    /// Every further download would fail the same way, so the run should stop.
+    /// </summary>
+    public static bool IsCookieError(string error) =>
+        error.Contains("cookie database", StringComparison.OrdinalIgnoreCase) ||
+        error.Contains("cookies database", StringComparison.OrdinalIgnoreCase) ||
+        error.Contains("Failed to decrypt with DPAPI", StringComparison.OrdinalIgnoreCase);
 
     private static long? ParseLong(string text) =>
         double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) ? (long)value : null;

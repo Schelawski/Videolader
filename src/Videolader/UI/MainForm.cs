@@ -38,7 +38,7 @@ internal sealed class MainForm : Form
     private readonly Button _btnBrowse = UiStyle.CreateButton("Durchsuchen…");
     private readonly Button _btnOpenFolder = UiStyle.CreateButton("Öffnen");
     private readonly ComboBox _cmbQuality = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
-    private readonly ComboBox _cmbCookies = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 110 };
+    private readonly ComboBox _cmbCookies = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190 };
     private readonly CheckBox _chkSubtitles = new() { Text = "herunterladen", AutoSize = true, Margin = new Padding(3, 5, 12, 3) };
     private readonly TextBox _txtLanguages = new() { Width = 110 };
     private readonly CheckBox _chkSkip = new() { Text = "Vorhandene überspringen", AutoSize = true, Margin = new Padding(12, 5, 3, 3) };
@@ -263,14 +263,14 @@ internal sealed class MainForm : Form
         [
             new Choice<string>(string.Empty, "keine"),
             new Choice<string>("firefox", "Firefox"),
-            new Choice<string>("chrome", "Chrome"),
-            new Choice<string>("edge", "Edge"),
-            new Choice<string>("brave", "Brave"),
+            new Choice<string>("chrome", "Chrome (meist gesperrt)"),
+            new Choice<string>("edge", "Edge (meist gesperrt)"),
+            new Choice<string>("brave", "Brave (meist gesperrt)"),
         ]);
 
         AddRow(table, "Cookies aus Browser:", WithHint(Flow(_cmbCookies),
             "Nur nötig, wenn YouTube eine Anmeldung verlangt („Sign in to confirm you're not a bot“). " +
-            "Firefox funktioniert am zuverlässigsten."));
+            "Firefox funktioniert; Chrome, Edge und Brave sperren ihre Cookies unter Windows meist."));
         AddRow(table, "YouTube-API-Key:", WithHint(Flow(_txtApiKey, _chkShowKey),
             "Optional – lädt Playlists und Titel schneller, für den Download nicht nötig."));
         AddRow(table, "Werkzeuge:", WithHint(Flow(_lblTools, _btnTools),
@@ -575,7 +575,7 @@ internal sealed class MainForm : Form
         RefreshTools();
         if (_tools.YtDlp is null || _tools.Ffmpeg is null)
         {
-            MessageBox.Show(this, "yt-dlp und ffmpeg werden benötigt. Klicke bei „Werkzeuge“ auf „Einrichten…“.", AppTitle,
+            MessageBox.Show(this, "yt-dlp und ffmpeg werden benötigt. Klicke unter „Einstellungen“ bei „Werkzeuge“ auf „Einrichten…“.", AppTitle,
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
@@ -597,6 +597,7 @@ internal sealed class MainForm : Form
 
         int done = 0, failed = 0, skipped = 0;
         var limitReached = false;
+        var cookieError = false;
         await RunBusyAsync("Download läuft…", async ct =>
         {
             var library = VideoLibrary.Open(_settings.OutputFolder);
@@ -669,6 +670,13 @@ internal sealed class MainForm : Form
                     _log.AppendMessage($"✖ {row.Entry.Id}: {result.Error}");
                     if (result.Error is not null && YtDlpOutput.GetHint(result.Error) is { } hint)
                         _log.AppendMessage("  Tipp: " + hint);
+
+                    // Every further video would fail the same way.
+                    if (result.Error is not null && YtDlpOutput.IsCookieError(result.Error))
+                    {
+                        cookieError = true;
+                        break;
+                    }
                 }
             }
         });
@@ -685,6 +693,27 @@ internal sealed class MainForm : Form
                                "zum Weitermachen erneut auf „Herunterladen“ klicken.");
         }
         UpdateCount();
+
+        if (cookieError)
+            OfferToTurnOffCookies();
+    }
+
+    private void OfferToTurnOffCookies()
+    {
+        _log.AppendMessage("Download gestoppt: Die Cookies lassen sich nicht aus dem Browser lesen.");
+        var answer = MessageBox.Show(this,
+            $"Die Cookies aus „{_cmbCookies.Text}“ lassen sich nicht lesen, deshalb wurde der Download gestoppt.\n\n" +
+            "Chrome, Edge und Brave sperren ihre Cookies unter Windows, solange der Browser läuft, und verschlüsseln " +
+            "sie so, dass yt-dlp sie nicht lesen kann. Cookies sind nur nötig, wenn YouTube eine Anmeldung verlangt.\n\n" +
+            "Cookies ausschalten und danach einfach erneut auf „Herunterladen“ klicken?",
+            AppTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+        if (answer != DialogResult.Yes)
+            return;
+
+        _cmbCookies.SelectedIndex = 0;
+        ReadSettingsFromControls();
+        SaveSettings();
+        _log.AppendMessage("Cookies ausgeschaltet.");
     }
 
     private void OnDownloadUpdate(VideoRow row, DownloadUpdate update)

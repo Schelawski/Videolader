@@ -130,3 +130,25 @@ public class YtDlpTests
     public void Reads_api_error_message() =>
         Assert.Equal("API key not valid.", YouTubeApiClient.ReadErrorMessage("""{"error":{"code":400,"message":"API key not valid."}}"""));
 }
+
+public class YtDlpHintTests
+{
+    [Theory]
+    [InlineData("ERROR: Could not copy Chrome cookie database. See  https://github.com/yt-dlp/yt-dlp/issues/7271  for more info")]
+    [InlineData(@"ERROR: could not find edge cookies database in ""C:\Users\x\AppData\Local\Microsoft\Edge\User Data""")]
+    [InlineData("ERROR: Failed to decrypt with DPAPI. See  https://github.com/yt-dlp/yt-dlp/issues/10927  for more info")]
+    public void Cookie_errors_are_recognized_and_explained(string error)
+    {
+        Assert.True(YtDlpOutput.IsCookieError(error));
+        Assert.Contains("Cookies", YtDlpOutput.GetHint(error));
+    }
+
+    [Theory]
+    [InlineData("ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you're not a bot")]
+    [InlineData("ERROR: unable to download video data: HTTP Error 429: Too Many Requests")]
+    [InlineData("ERROR: [youtube] dQw4w9WgXcQ: Private video")]
+    public void Other_errors_do_not_stop_the_run(string error)
+    {
+        Assert.False(YtDlpOutput.IsCookieError(error));
+    }
+}

@@ -161,6 +161,13 @@ public sealed class CliRunner(
                 if (result.Error is not null && YtDlpOutput.GetHint(result.Error) is { } hint)
                     _log.WriteLine("    Tipp: " + hint);
                 Emit(entry, "failed", error: result.Error);
+
+                // Every further video would fail the same way.
+                if (result.Error is not null && YtDlpOutput.IsCookieError(result.Error))
+                {
+                    _log.WriteLine("Gestoppt: Die Cookies lassen sich nicht lesen. Ohne --cookies oder mit --cookies firefox erneut versuchen.");
+                    break;
+                }
             }
         }
 
