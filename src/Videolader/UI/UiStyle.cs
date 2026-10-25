@@ -57,6 +57,61 @@ internal static class UiStyle
         Anchor = AnchorStyles.Left,
         Margin = new Padding(3, 6, 3, 3),
     };
+
+    /// <summary>Windows' own icon font (Windows 11, else Windows 10); null if neither is installed.</summary>
+    private static readonly string? IconFontName = new[] { "Segoe Fluent Icons", "Segoe MDL2 Assets" }.FirstOrDefault(name =>
+    {
+        using var font = new Font(name, 10f);
+        return font.Name == name;
+    });
+
+    /// <summary>Draws a glyph of the icon font as a 16 px image (scaled to <paramref name="dpi"/>); null without icon font.</summary>
+    public static Bitmap? CreateIcon(char glyph, Color color, int dpi)
+    {
+        if (IconFontName is null)
+            return null;
+
+        var size = (int)Math.Round(16 * dpi / 96f);
+        var bitmap = new Bitmap(size, size);
+        using var graphics = Graphics.FromImage(bitmap);
+        using var font = new Font(IconFontName, size * 0.85f, GraphicsUnit.Pixel);
+        using var brush = new SolidBrush(color);
+        using var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+        graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+        graphics.DrawString(glyph.ToString(), font, brush, new RectangleF(0, 0, size, size), format);
+        return bitmap;
+    }
+
+    /// <summary>Puts an icon in front of the button text, in the button's text color.</summary>
+    public static void SetIcon(Button button, char glyph, int dpi)
+    {
+        if (CreateIcon(glyph, button.ForeColor, dpi) is not { } icon)
+            return;
+
+        var old = button.Image;
+        button.Image = icon;
+        button.TextImageRelation = TextImageRelation.ImageBeforeText;
+        old?.Dispose();
+    }
+}
+
+/// <summary>Code points of the icon font (identical in Segoe Fluent Icons and Segoe MDL2 Assets).</summary>
+internal static class Glyph
+{
+    public const char Cancel = '';
+    public const char ChevronDown = '';
+    public const char ChevronUp = '';
+    public const char Settings = '';
+    public const char Filter = '';
+    public const char Refresh = '';
+    public const char Checkbox = '';
+    public const char CheckboxChecked = '';
+    public const char Delete = '';
+    public const char Warning = '';
+    public const char Download = '';
+    public const char Folder = '';
+    public const char List = '';
+    public const char OpenFolder = '';
 }
 
 /// <summary>Read-only, monospaced log that scrolls to the newest line.</summary>

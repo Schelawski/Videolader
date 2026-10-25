@@ -14,6 +14,9 @@ internal sealed class MainForm : Form
 {
     public const string AppTitle = "Videolader";
 
+    /// <summary>Free space above and below the window at start, as a share of the screen height.</summary>
+    private const double ScreenMargin = 0.05;
+
     private static readonly HttpClient Http = CreateHttpClient();
 
     private readonly SettingsStore _store = new(new DpapiSecretProtector());
@@ -82,10 +85,13 @@ internal sealed class MainForm : Form
         Text = AppTitle;
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(960, 640);
-        var area = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1280, 1000);
-        Size = new Size(Math.Min(1180, area.Width), Math.Min(920, area.Height));
+        // Height from the screen the window opens on (CenterScreen uses the one under the mouse), with a margin above and below.
+        var area = Screen.FromPoint(Cursor.Position).WorkingArea;
+        var height = (int)(area.Height * (1 - 2 * ScreenMargin));
+        Size = new Size(Math.Min(1180, area.Width), Math.Min(Math.Max(height, MinimumSize.Height), area.Height));
 
         BuildLayout();
+        ApplyIcons();
         LoadSettingsIntoControls();
         WireEvents();
         UpdateCount();
@@ -118,7 +124,7 @@ internal sealed class MainForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-        var downloadPage = new TabPage("Download") { Padding = new Padding(8), UseVisualStyleBackColor = true };
+        var downloadPage = new TabPage("Download") { Padding = new Padding(8), UseVisualStyleBackColor = true, ImageKey = "download" };
         downloadPage.Controls.Add(BuildDownloadPage());
         _tabSettings.Controls.Add(BuildSettingsPage());
         _tabs.TabPages.Add(downloadPage);
@@ -149,6 +155,35 @@ internal sealed class MainForm : Form
         page.Controls.Add(top, 0, 0);
         page.Controls.Add(BuildListArea(), 0, 1);
         return page;
+    }
+
+    private void ApplyIcons()
+    {
+        UiStyle.SetIcon(_btnLoad, Glyph.List, DeviceDpi);
+        UiStyle.SetIcon(_btnClearInput, Glyph.Delete, DeviceDpi);
+        UiStyle.SetIcon(_btnBrowse, Glyph.Folder, DeviceDpi);
+        UiStyle.SetIcon(_btnOpenFolder, Glyph.OpenFolder, DeviceDpi);
+        UiStyle.SetIcon(_btnAll, Glyph.CheckboxChecked, DeviceDpi);
+        UiStyle.SetIcon(_btnNone, Glyph.Checkbox, DeviceDpi);
+        UiStyle.SetIcon(_btnOnlyNew, Glyph.Filter, DeviceDpi);
+        UiStyle.SetIcon(_btnDownload, Glyph.Download, DeviceDpi);
+        UiStyle.SetIcon(_btnCancel, Glyph.Cancel, DeviceDpi);
+
+        var size = (int)Math.Round(16 * DeviceDpi / 96f);
+        var images = new ImageList { ColorDepth = ColorDepth.Depth32Bit, ImageSize = new Size(size, size) };
+        foreach (var (key, glyph, color) in new[]
+                 {
+                     ("download", Glyph.Download, SystemColors.ControlText),
+                     ("settings", Glyph.Settings, SystemColors.ControlText),
+                     ("warning", Glyph.Warning, UiStyle.DangerText),
+                 })
+        {
+            if (UiStyle.CreateIcon(glyph, color, DeviceDpi) is { } icon)
+                images.Images.Add(key, icon);
+        }
+
+        _tabs.ImageList = images;
+        _tabSettings.ImageKey = "settings";
     }
 
     private GroupBox BuildInputGroup()
@@ -680,7 +715,9 @@ internal sealed class MainForm : Form
         _lblTools.Text = $"yt-dlp {Mark(_tools.YtDlp)}    ffmpeg {Mark(_tools.Ffmpeg)}    Deno {Mark(_tools.Deno)}";
         _lblTools.ForeColor = _tools.IsComplete ? UiStyle.SuccessText : UiStyle.DangerText;
         _btnTools.Text = _tools.IsComplete ? "Aktualisieren" : "Einrichten…";
-        _tabSettings.Text = _tools.IsComplete ? "Einstellungen" : "Einstellungen ⚠ Werkzeuge fehlen";
+        UiStyle.SetIcon(_btnTools, _tools.IsComplete ? Glyph.Refresh : Glyph.Download, DeviceDpi);
+        _tabSettings.Text = _tools.IsComplete ? "Einstellungen" : "Einstellungen – Werkzeuge fehlen";
+        _tabSettings.ImageKey = _tools.IsComplete ? "settings" : "warning";
     }
 
     private IEnumerable<string> MissingTools()
@@ -871,6 +908,7 @@ internal sealed class MainForm : Form
     {
         _split.Panel2Collapsed = !visible;
         _btnToggleLog.Text = visible ? "Protokoll ausblenden" : "Protokoll anzeigen";
+        UiStyle.SetIcon(_btnToggleLog, visible ? Glyph.ChevronDown : Glyph.ChevronUp, DeviceDpi);
         _settings.ShowLog = visible;
     }
 
