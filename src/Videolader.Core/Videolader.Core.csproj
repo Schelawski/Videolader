@@ -10,6 +10,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Videolader.Core</RootNamespace>
     <AssemblyName>Videolader.Core</AssemblyName>
+    <!-- Debug info inside the DLL, so publishing leaves no Videolader.Core.pdb next to Videolader.exe -->
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
