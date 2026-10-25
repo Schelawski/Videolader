@@ -170,9 +170,9 @@ public class UiLanguageTests
     [Fact]
     public void CommandLineReadsTheLanguage()
     {
-        Assert.Equal(UiLanguage.Russian, CliArguments.Parse(["dQw4w9WgXcQ", "--lang", "ru"]).Options!.Language);
-        Assert.Equal(UiLanguage.German, CliArguments.Parse(["dQw4w9WgXcQ", "--lang=de"]).Options!.Language);
-        Assert.Null(CliArguments.Parse(["dQw4w9WgXcQ"]).Options!.Language);
-        Assert.NotNull(CliArguments.Parse(["dQw4w9WgXcQ", "--lang", "fr"]).Error);
+        Assert.Equal(UiLanguage.Russian, CliArguments.Parse(["aqz-KE-bpKQ", "--lang", "ru"]).Options!.Language);
+        Assert.Equal(UiLanguage.German, CliArguments.Parse(["aqz-KE-bpKQ", "--lang=de"]).Options!.Language);
+        Assert.Null(CliArguments.Parse(["aqz-KE-bpKQ"]).Options!.Language);
+        Assert.NotNull(CliArguments.Parse(["aqz-KE-bpKQ", "--lang", "fr"]).Error);
     }
 }

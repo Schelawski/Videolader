@@ -2,7 +2,7 @@ namespace Videolader.Core;
 
 /// <summary>
 /// Knows which videos already exist in the output folder. A video counts as downloaded if a media
-/// file named after its ID exists (<c>dQw4w9WgXcQ.mp4</c>) or if its ID is listed in the archive file.
+/// file named after its ID exists (<c>aqz-KE-bpKQ.mp4</c>) or if its ID is listed in the archive file.
 /// The archive keeps working when videos are moved elsewhere after downloading.
 /// </summary>
 public sealed class VideoLibrary

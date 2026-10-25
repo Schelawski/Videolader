@@ -22,10 +22,10 @@ die Erfahrungen aus der Praxis, etwa zur Pause und zu den Cookies. Die Texte ste
 
 ```
 D:\Videos\Ananda\
-  dQw4w9WgXcQ.mp4           Video (H.264 + AAC, bei „Nur Audio“: .m4a)
-  dQw4w9WgXcQ.info.json     ID, Titel, Kanal, Datum, Dauer, Beschreibung, Playlist, Untertitel
-  dQw4w9WgXcQ.ru.json       Untertitel im Whisper-Format (optional)
-  dQw4w9WgXcQ.ru.srt        dieselben Untertitel als SRT (optional)
+  aqz-KE-bpKQ.mp4           Video (H.264 + AAC, bei „Nur Audio“: .m4a)
+  aqz-KE-bpKQ.info.json     ID, Titel, Kanal, Datum, Dauer, Beschreibung, Playlist, Untertitel
+  aqz-KE-bpKQ.ru.json       Untertitel im Whisper-Format (optional)
+  aqz-KE-bpKQ.ru.srt        dieselben Untertitel als SRT (optional)
   videolader-archiv.txt     Liste aller heruntergeladenen IDs
 ```
 
@@ -36,18 +36,18 @@ einem Transkript, das Wortlaut für `<ID>.mp4` als `<ID>.json` schreibt.
 
 ```json
 {
-  "id": "dQw4w9WgXcQ",
+  "id": "aqz-KE-bpKQ",
   "title": "Лекция 12",
-  "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
   "channel": "Ananda Vidya",
   "channelId": "UC…",
   "uploadDate": "2024-05-01",
   "durationSeconds": 3725,
   "description": "…",
   "playlist": { "id": "PL…", "title": "Satsang 2026", "index": 3 },
-  "file": "dQw4w9WgXcQ.mp4",
+  "file": "aqz-KE-bpKQ.mp4",
   "subtitles": [
-    { "language": "ru", "automatic": true, "file": "dQw4w9WgXcQ.ru.json", "srt": "dQw4w9WgXcQ.ru.srt" }
+    { "language": "ru", "automatic": true, "file": "aqz-KE-bpKQ.ru.json", "srt": "aqz-KE-bpKQ.ru.srt" }
   ],
   "downloadedAt": "2026-09-30T20:43:54+02:00"
 }
@@ -121,7 +121,7 @@ Mit Argumenten arbeitet `Videolader.exe` ohne Fenster, ohne Argumente öffnet si
 
 ```powershell
 Videolader.exe setup                                   # yt-dlp, ffmpeg, Deno einrichten (einmalig)
-Videolader.exe dQw4w9WgXcQ --out D:\Videos             # ein Video
+Videolader.exe aqz-KE-bpKQ --out D:\Videos             # ein Video
 Videolader.exe PLxxxxxxxxxxx --limit 50 --pause 5      # eine Playlist, höchstens 50 pro Lauf
 Videolader.exe @KanalName --list                       # Kanal nur auflisten
 Videolader.exe --help --lang en                        # alle Optionen, auf Englisch
@@ -187,5 +187,38 @@ Zielordner stammt aus einer älteren Version und kann gelöscht werden.
 
 ## Rechtliches
 
-Die YouTube-Nutzungsbedingungen erlauben Downloads grundsätzlich nur über YouTubes eigene
-Funktionen. Für eigene Inhalte oder mit Erlaubnis der Rechteinhaber ist das unproblematisch.
+Videolader ist ein unabhängiges Projekt und **nicht mit YouTube oder Google verbunden**. „YouTube“
+ist eine Marke von Google LLC.
+
+Du bist selbst dafür verantwortlich, beim Herunterladen das Urheberrecht und die
+Nutzungsbedingungen von YouTube einzuhalten. Diese erlauben Downloads grundsätzlich nur über
+YouTubes eigene Funktionen. Unproblematisch ist es bei eigenen Inhalten, bei freien Inhalten
+(z. B. unter Creative-Commons-Lizenz) oder mit Erlaubnis der Rechteinhaber.
+
+Das Beispiel-Video `aqz-KE-bpKQ` in dieser README und in der Hilfe ist „Big Buck Bunny“ der
+Blender Foundation (Creative Commons CC BY 3.0).
+
+## Datenschutz
+
+Videolader sammelt keine Daten und sendet nichts an den Entwickler: kein Konto, keine Statistik,
+keine Werbung. Verbindungen gibt es nur zu:
+
+- **YouTube**, um Listen, Titel und Videos zu laden,
+- der **YouTube Data API** von Google, nur mit eigenem API-Key,
+- **GitHub**, um yt-dlp, ffmpeg und Deno herunterzuladen und zu aktualisieren.
+
+Cookies aus dem Browser werden nur gelesen, wenn ein Browser ausgewählt ist, und nur an yt-dlp
+übergeben. Einstellungen und API-Key bleiben auf dem Rechner, der Key mit Windows DPAPI
+verschlüsselt.
+
+## Lizenzen
+
+Videolader steht unter der [GNU General Public License, Version 3](LICENSE). Die Werkzeuge werden
+nicht mitgeliefert, sondern beim Einrichten von ihren offiziellen Seiten geladen und stehen unter
+eigenen Lizenzen:
+
+| Werkzeug | Lizenz | Quelle |
+|---|---|---|
+| yt-dlp | [Unlicense](https://github.com/yt-dlp/yt-dlp/blob/master/LICENSE) | [github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp) |
+| FFmpeg | [GPL](https://github.com/yt-dlp/FFmpeg-Builds#ffmpeg-static-auto-builds) (Build des yt-dlp-Teams) | [github.com/yt-dlp/FFmpeg-Builds](https://github.com/yt-dlp/FFmpeg-Builds) |
+| Deno | [MIT](https://github.com/denoland/deno/blob/main/LICENSE.md) | [github.com/denoland/deno](https://github.com/denoland/deno) |

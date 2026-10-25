@@ -9,15 +9,15 @@ public class VideoLibraryTests
     public void Finds_media_file_named_after_the_id()
     {
         using var folder = new TempFolder();
-        folder.File("dQw4w9WgXcQ.info.json", "{}");
-        folder.File("dQw4w9WgXcQ.ru.srt");
+        folder.File("aqz-KE-bpKQ.info.json", "{}");
+        folder.File("aqz-KE-bpKQ.ru.srt");
         var library = VideoLibrary.Open(folder.Path);
-        Assert.False(library.IsDownloaded("dQw4w9WgXcQ"));
+        Assert.False(library.IsDownloaded("aqz-KE-bpKQ"));
 
-        folder.File("dQw4w9WgXcQ.mp4");
+        folder.File("aqz-KE-bpKQ.mp4");
 
-        Assert.True(library.IsDownloaded("dQw4w9WgXcQ"));
-        Assert.EndsWith("dQw4w9WgXcQ.mp4", library.FindMediaFile("dQw4w9WgXcQ"));
+        Assert.True(library.IsDownloaded("aqz-KE-bpKQ"));
+        Assert.EndsWith("aqz-KE-bpKQ.mp4", library.FindMediaFile("aqz-KE-bpKQ"));
     }
 
     [Fact]
@@ -36,8 +36,8 @@ public class VideoLibraryTests
     }
 
     [Theory]
-    [InlineData("youtube dQw4w9WgXcQ", "dQw4w9WgXcQ")]
-    [InlineData("dQw4w9WgXcQ", "dQw4w9WgXcQ")]
+    [InlineData("youtube aqz-KE-bpKQ", "aqz-KE-bpKQ")]
+    [InlineData("aqz-KE-bpKQ", "aqz-KE-bpKQ")]
     [InlineData("vimeo 123", null)]
     [InlineData("", null)]
     public void Parses_archive_lines(string line, string? expected) =>
@@ -45,14 +45,14 @@ public class VideoLibraryTests
 
     [Fact]
     public void Missing_folder_means_nothing_downloaded() =>
-        Assert.False(VideoLibrary.Open(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))).IsDownloaded("dQw4w9WgXcQ"));
+        Assert.False(VideoLibrary.Open(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))).IsDownloaded("aqz-KE-bpKQ"));
 }
 
 /// <summary>Reads translated texts (download phases), so it runs in the <see cref="UiTextCollection"/>.</summary>
 [Collection(nameof(UiTextCollection))]
 public class DownloadJobTests
 {
-    private const string Id = "dQw4w9WgXcQ";
+    private const string Id = "aqz-KE-bpKQ";
 
     private static readonly DateTimeOffset Now = new(2026, 9, 30, 20, 0, 0, TimeSpan.FromHours(2));
 
@@ -68,8 +68,8 @@ public class DownloadJobTests
 
             File.WriteAllText(Path.Combine(temp, Id + ".info.json"), """
                 {
-                  "id": "dQw4w9WgXcQ", "title": "Лекция 12", "channel": "Ananda Vidya", "channel_id": "UC123",
-                  "upload_date": "20240501", "duration": 3725, "webpage_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                  "id": "aqz-KE-bpKQ", "title": "Лекция 12", "channel": "Ananda Vidya", "channel_id": "UC123",
+                  "upload_date": "20240501", "duration": 3725, "webpage_url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
                   "description": "Beschreibung", "language": "ru",
                   "subtitles": { "en": [] },
                   "automatic_captions": { "ru": [] }
@@ -161,7 +161,7 @@ public class DownloadJobTests
         using var folder = new TempFolder();
         var library = VideoLibrary.Open(folder.Path);
 
-        var result = await FakeJob(false, 1, "ERROR: [youtube] dQw4w9WgXcQ: Private video. Sign in if you've been granted access")
+        var result = await FakeJob(false, 1, "ERROR: [youtube] aqz-KE-bpKQ: Private video. Sign in if you've been granted access")
             .RunAsync(Samples.Entry(Id), new AppSettings(), library, new ListProgress<DownloadUpdate>(), CancellationToken.None);
 
         Assert.False(result.Success);

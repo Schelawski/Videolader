@@ -82,7 +82,7 @@ internal static class Samples
         "00:00:02.960 --> 00:00:06.960 align:start position:0%\ngood evening\ntoday<00:00:03.260><c> we</c><00:00:03.660><c> talk</c>\n\n" +
         "00:00:06.960 --> 00:00:06.970 align:start position:0%\ntoday we talk\n \n";
 
-    public static VideoEntry Entry(string id = "dQw4w9WgXcQ") => new(id)
+    public static VideoEntry Entry(string id = "aqz-KE-bpKQ") => new(id)
     {
         Title = "Lecture 12",
         PlaylistId = "PLabcdefghijklmnop",

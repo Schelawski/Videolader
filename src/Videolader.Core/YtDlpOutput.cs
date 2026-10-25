@@ -37,7 +37,7 @@ public static class YtDlpOutput
             return null;
 
         var message = line["ERROR:".Length..].Trim();
-        // "[youtube] dQw4w9WgXcQ: Video unavailable" -> "Video unavailable"
+        // "[youtube] aqz-KE-bpKQ: Video unavailable" -> "Video unavailable"
         if (message.StartsWith('['))
         {
             var colon = message.IndexOf(": ", StringComparison.Ordinal);

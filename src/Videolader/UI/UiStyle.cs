@@ -19,6 +19,9 @@ internal static class UiStyle
 
     public static readonly Badge Info = new(Color.FromArgb(219, 234, 254), Color.FromArgb(30, 64, 175));
 
+    /// <summary>The icon embedded in Videolader.exe (see ApplicationIcon in the project), for the window title bars.</summary>
+    public static Icon? AppIcon { get; } = Icon.ExtractAssociatedIcon(Environment.ProcessPath ?? Application.ExecutablePath);
+
     public static Font CreateMonospaceFont(float size = 9f) => new("Consolas", size);
 
     public static void FillRoundedRectangle(Graphics graphics, Color color, RectangleF bounds, float radius)

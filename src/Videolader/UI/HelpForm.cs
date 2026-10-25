@@ -38,6 +38,7 @@ internal sealed class HelpForm : Form
         AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
         Text = UiText.HelpTitle;
+        Icon = UiStyle.AppIcon;
         StartPosition = FormStartPosition.CenterParent;
         ClientSize = new Size(960, 640);
         MinimumSize = new Size(600, 400);

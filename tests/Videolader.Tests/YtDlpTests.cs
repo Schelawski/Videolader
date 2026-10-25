@@ -99,7 +99,7 @@ public class YtDlpTests
             {
               "id": "PLabcdefghijklmnop", "title": "Satsang 2026", "_type": "playlist",
               "entries": [
-                { "id": "dQw4w9WgXcQ", "title": "Lecture 1", "duration": 3725.0, "channel": "Ananda" },
+                { "id": "aqz-KE-bpKQ", "title": "Lecture 1", "duration": 3725.0, "channel": "Ananda" },
                 { "id": "jNQXAC9IVRw", "title": "[Private video]", "duration": null },
                 { "id": "UCxxxxxxxxxxxxxxxxxxxxxx", "title": "Not a video" }
               ]
@@ -144,9 +144,9 @@ public class YtDlpHintTests
     }
 
     [Theory]
-    [InlineData("ERROR: [youtube] dQw4w9WgXcQ: Sign in to confirm you're not a bot")]
+    [InlineData("ERROR: [youtube] aqz-KE-bpKQ: Sign in to confirm you're not a bot")]
     [InlineData("ERROR: unable to download video data: HTTP Error 429: Too Many Requests")]
-    [InlineData("ERROR: [youtube] dQw4w9WgXcQ: Private video")]
+    [InlineData("ERROR: [youtube] aqz-KE-bpKQ: Private video")]
     public void Other_errors_do_not_stop_the_run(string error)
     {
         Assert.False(YtDlpOutput.IsCookieError(error));

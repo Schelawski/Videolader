@@ -92,6 +92,7 @@ internal sealed class MainForm : Form
         _tools = ToolLocator.Locate(_toolsDirectory, AppContext.BaseDirectory);
 
         Text = AppTitle;
+        Icon = UiStyle.AppIcon;
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(960, 640);
         // Height from the screen the window opens on (CenterScreen uses the one under the mouse), with a margin above and below.
@@ -219,7 +220,7 @@ internal sealed class MainForm : Form
         _txtInput.Dock = DockStyle.Fill;
         _txtInput.MinimumSize = new Size(0, 90);
         _txtInput.Font = UiStyle.CreateMonospaceFont(9.5f);
-        _txtInput.PlaceholderText = "https://www.youtube.com/playlist?list=PL…\r\nhttps://youtu.be/dQw4w9WgXcQ\r\ndQw4w9WgXcQ";
+        _txtInput.PlaceholderText = "https://www.youtube.com/playlist?list=PL…\r\nhttps://youtu.be/aqz-KE-bpKQ\r\naqz-KE-bpKQ";
         _tips.SetToolTip(_txtInput, UiText.InputTip);
 
         UiStyle.MakePrimary(_btnLoad);

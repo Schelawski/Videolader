@@ -4,7 +4,7 @@ subheadings and list items per topic. Button names must match the user interface
 
 # about | Was macht Videolader?
 
-Videolader lädt Videos, ganze Playlists und Kanäle von YouTube auf deinen Computer. Jedes Video wird nach seiner **Video-ID** benannt, z. B. `dQw4w9WgXcQ.mp4`. So bleibt der Name eindeutig, auch wenn der Titel Sonderzeichen enthält oder sich später ändert.
+Videolader lädt Videos, ganze Playlists und Kanäle von YouTube auf deinen Computer. Jedes Video wird nach seiner **Video-ID** benannt, z. B. `aqz-KE-bpKQ.mp4`. So bleibt der Name eindeutig, auch wenn der Titel Sonderzeichen enthält oder sich später ändert.
 
 ## Was pro Video entsteht
 
@@ -19,7 +19,19 @@ Das Herunterladen übernimmt das freie Programm yt-dlp. Videolader ist die einfa
 
 ## Rechtliches
 
-YouTube erlaubt Downloads grundsätzlich nur über die eigenen Funktionen. Für eigene Inhalte oder mit Erlaubnis der Rechteinhaber ist das unproblematisch.
+Videolader ist ein unabhängiges Projekt und **nicht mit YouTube oder Google verbunden**. „YouTube“ ist eine Marke von Google LLC.
+
+Du bist selbst dafür verantwortlich, beim Herunterladen das Urheberrecht und die Nutzungsbedingungen von YouTube einzuhalten. YouTube erlaubt Downloads grundsätzlich nur über die eigenen Funktionen. Unproblematisch ist es bei eigenen Inhalten, bei freien Inhalten (z. B. unter Creative-Commons-Lizenz) oder mit Erlaubnis der Rechteinhaber.
+
+## Datenschutz
+
+Videolader sammelt keine Daten über dich und sendet nichts an den Entwickler: kein Konto, keine Statistik, keine Werbung. Verbindungen gibt es nur zu:
+
+- **YouTube** – um Listen, Titel und Videos zu laden.
+- **YouTube Data API** von Google – nur, wenn du einen eigenen API-Key einträgst.
+- **GitHub** – um yt-dlp, ffmpeg und Deno herunterzuladen und zu aktualisieren.
+
+Cookies aus dem Browser liest Videolader nur, wenn du einen Browser auswählst, und gibt sie nur an yt-dlp weiter, das damit bei YouTube anfragt. Einstellungen und API-Key bleiben auf deinem Rechner, der Key verschlüsselt.
 
 # start | Erste Schritte
 
@@ -153,7 +165,7 @@ Mit Argumenten arbeitet `Videolader.exe` ohne Fenster – praktisch für die Auf
 ## Beispiele
 
 - `Videolader.exe setup` – Werkzeuge einrichten (einmalig).
-- `Videolader.exe dQw4w9WgXcQ --out D:\Videos` – ein Video.
+- `Videolader.exe aqz-KE-bpKQ --out D:\Videos` – ein Video.
 - `Videolader.exe PLxxxxxxxx --limit 50 --pause 45` – eine Playlist, höchstens 50 pro Lauf.
 - `Videolader.exe @Kanalname --list` – einen Kanal nur auflisten.
 - `Videolader.exe --help --lang de` – alle Optionen, auf Deutsch.
@@ -212,6 +224,8 @@ Deine Videos und die Datei `videolader-archiv.txt` in den Zielordnern bleiben un
 
 Videolader baut auf der Arbeit anderer auf. Herzlichen Dank an:
 
-- **yt-dlp** – lädt die Videos (Unlicense).
-- **FFmpeg** – fügt Bild und Ton zusammen (GPL, Build des yt-dlp-Teams).
-- **Deno** – JavaScript-Laufzeit für YouTubes Prüfung (MIT-Lizenz).
+- **yt-dlp** – lädt die Videos (Unlicense, `github.com/yt-dlp/yt-dlp`).
+- **FFmpeg** – fügt Bild und Ton zusammen (GPL, Build des yt-dlp-Teams: `github.com/yt-dlp/FFmpeg-Builds`).
+- **Deno** – JavaScript-Laufzeit für YouTubes Prüfung (MIT-Lizenz, `github.com/denoland/deno`).
+
+Diese Werkzeuge liefert Videolader nicht mit. Beim Einrichten werden sie direkt von den genannten offiziellen Seiten geladen, ihre Lizenzen findest du dort. Das Beispiel-Video `aqz-KE-bpKQ` in dieser Hilfe ist „Big Buck Bunny“ der Blender Foundation (Creative Commons CC BY 3.0).

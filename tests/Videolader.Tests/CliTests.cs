@@ -8,12 +8,12 @@ public class CliArgumentsTests
     public void Links_and_options_are_read()
     {
         var result = CliArguments.Parse(
-            ["dQw4w9WgXcQ", "https://www.youtube.com/playlist?list=PLabcdefghijk", "--out", @"D:\Videos", "--quality", "720",
+            ["aqz-KE-bpKQ", "https://www.youtube.com/playlist?list=PLabcdefghijk", "--out", @"D:\Videos", "--quality", "720",
              "--subs=ru,de", "--limit", "50", "--pause", "5", "--cookies", "firefox", "--json", "--list"]);
 
         Assert.Null(result.Error);
         var o = result.Options!;
-        Assert.Equal(["dQw4w9WgXcQ", "https://www.youtube.com/playlist?list=PLabcdefghijk"], o.Inputs);
+        Assert.Equal(["aqz-KE-bpKQ", "https://www.youtube.com/playlist?list=PLabcdefghijk"], o.Inputs);
         Assert.Equal(@"D:\Videos", o.OutputFolder);
         Assert.Equal(VideoQuality.Max720, o.Quality);
         Assert.Equal("ru,de", o.SubtitleLanguages);
@@ -27,9 +27,9 @@ public class CliArgumentsTests
     [Fact]
     public void Download_keyword_and_id_options_are_accepted()
     {
-        var result = CliArguments.Parse(["download", "--id", "dQw4w9WgXcQ", "--playlist", "PLabcdefghijk"]);
+        var result = CliArguments.Parse(["download", "--id", "aqz-KE-bpKQ", "--playlist", "PLabcdefghijk"]);
 
-        Assert.Equal(["dQw4w9WgXcQ", "PLabcdefghijk"], result.Options!.Inputs);
+        Assert.Equal(["aqz-KE-bpKQ", "PLabcdefghijk"], result.Options!.Inputs);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class CliArgumentsTests
     [InlineData("--bogus", "1")]
     public void Wrong_values_give_an_error(string option, string value)
     {
-        var result = CliArguments.Parse(["dQw4w9WgXcQ", option, value]);
+        var result = CliArguments.Parse(["aqz-KE-bpKQ", option, value]);
 
         Assert.Null(result.Options);
         Assert.False(string.IsNullOrEmpty(result.Error));
@@ -57,7 +57,7 @@ public class CliArgumentsTests
     [Fact]
     public void Missing_value_gives_an_error()
     {
-        Assert.NotNull(CliArguments.Parse(["dQw4w9WgXcQ", "--out"]).Error);
+        Assert.NotNull(CliArguments.Parse(["aqz-KE-bpKQ", "--out"]).Error);
     }
 
     [Fact]
