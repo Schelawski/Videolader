@@ -1,0 +1,118 @@
+# Publishes a release when a version tag is pushed:
+#
+#   git tag v1.2.0
+#   git push origin v1.2.0
+#
+# Builds and tests, stamps the version from the tag into Videolader.exe, and creates the GitHub release with
+# Videolader.exe and its SHA-256 checksum. Release notes come from the matching section of CHANGELOG.md.
+# A tag with a suffix (v1.3.0-beta.1) becomes a pre-release; the stable download link
+# https://github.com/Schelawski/Videolader/releases/latest/download/Videolader.exe always points to the newest
+# final release.
+#
+# "Run workflow" (workflow_dispatch) is a dry run: the same steps for a given version, but the files are only
+# kept as a build artifact and nothing is published. Use it to check a new CHANGELOG section before tagging.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for the dry run, e.g. 1.0.0 (nothing is published)'
+        required: true
+
+permissions:
+  contents: write # create the release
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Read the version from the tag
+        id: version
+        shell: pwsh
+        env:
+          TAG: ${{ github.event_name == 'push' && github.ref_name || format('v{0}', inputs.version) }}
+        run: |
+          if ($env:TAG -notmatch '^v(?<number>\d+\.\d+\.\d+)(?<pre>-[0-9A-Za-z.-]+)?$') {
+            throw "Tag '$env:TAG' is not a version like v1.2.3 or v1.2.3-beta.1."
+          }
+          "version=$($env:TAG.Substring(1))" >> $env:GITHUB_OUTPUT
+          "number=$($Matches.number)" >> $env:GITHUB_OUTPUT
+          "prerelease=$(if ($Matches.pre) { 'true' } else { 'false' })" >> $env:GITHUB_OUTPUT
+
+      - name: Test
+        run: dotnet test --configuration Release
+
+      - name: Publish
+        shell: pwsh
+        run: >
+          dotnet publish src/Videolader --configuration Release --output publish
+          -p:Version=${{ steps.version.outputs.version }}
+          -p:AssemblyVersion=${{ steps.version.outputs.number }}.0
+          -p:FileVersion=${{ steps.version.outputs.number }}.0
+
+      - name: Check the version in the exe
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $output = (& ./publish/Videolader.exe --version | Out-String).Trim()
+          if ($output -ne "Videolader $env:VERSION") { throw "Videolader.exe reports '$output', expected 'Videolader $env:VERSION'." }
+          $output
+
+      # Code signing (decision in issue #27) goes here, before the checksum is computed.
+
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash publish/Videolader.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          # Same format as sha256sum: "<hash>  <file name>"
+          Set-Content -Path publish/Videolader.exe.sha256 -Value "$hash  Videolader.exe" -Encoding ascii -NoNewline
+          "SHA-256: $hash"
+
+      - name: Release notes
+        shell: pwsh
+        run: ./.github/scripts/Get-ReleaseNotes.ps1 -Version '${{ steps.version.outputs.version }}' -Path CHANGELOG.md -OutFile publish/release-notes.md
+
+      - name: Keep the files of the dry run
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Videolader-${{ steps.version.outputs.version }}-dry-run
+          path: |
+            publish/Videolader.exe
+            publish/Videolader.exe.sha256
+            publish/release-notes.md
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Create the release
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          $arguments = @(
+            'release', 'create', $env:TAG,
+            'publish/Videolader.exe', 'publish/Videolader.exe.sha256',
+            '--title', "Videolader $env:VERSION",
+            '--notes-file', 'publish/release-notes.md',
+            '--verify-tag'
+          )
+          if ($env:PRERELEASE -eq 'true') { $arguments += '--prerelease' }
+          gh @arguments

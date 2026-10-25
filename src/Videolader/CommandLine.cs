@@ -36,6 +36,12 @@ internal static class CommandLine
             return CliRunner.ExitBadInput;
         }
 
+        if (parsed.Options.ShowVersion)
+        {
+            Console.Out.WriteLine($"Videolader {AppVersion.Current}");
+            return CliRunner.ExitOk;
+        }
+
         if (parsed.Options.Help)
         {
             Console.Out.WriteLine(CliArguments.HelpText);

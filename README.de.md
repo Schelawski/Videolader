@@ -187,6 +187,25 @@ dotnet publish src\Videolader -c Release -o publish
 
 Ergebnis: `publish\Videolader.exe`, eine einzelne Datei mit eingebettetem .NET, ohne Installation.
 
+### Veröffentlichen
+
+1. Die Einträge unter `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md) in einen neuen Abschnitt
+   `## [1.2.0]` verschieben (Version ohne „v“) und committen.
+2. Optional Probelauf: **Actions → Release → Run workflow** mit der Version baut alles und bewahrt
+   `Videolader.exe`, Prüfsumme und Release-Notes als Artefakt auf, ohne etwas zu veröffentlichen.
+3. Den Commit taggen und den Tag pushen:
+   ```powershell
+   git tag v1.2.0
+   git push origin v1.2.0
+   ```
+4. [release.yml](.github/workflows/release.yml) baut und testet, schreibt die Version in `Videolader.exe`
+   (Fenstertitel, `--version`, Dateieigenschaften), prüft sie und legt das GitHub-Release mit
+   `Videolader.exe`, `Videolader.exe.sha256` und dem Changelog-Abschnitt als Release-Notes an.
+
+Ein Tag mit Zusatz wie `v1.3.0-beta.1` wird eine Vorabversion und vom `latest/download`-Link nicht
+erreicht. Fehlt der Changelog-Abschnitt für die Version, bricht das Release ab, bevor etwas
+veröffentlicht wird.
+
 ## Aufbau
 
 ```

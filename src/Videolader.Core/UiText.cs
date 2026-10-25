@@ -588,6 +588,7 @@ public static class UiText
           Videolader.exe <link-or-ID> [<link-or-ID> ...] [options]
           Videolader.exe setup            download or update yt-dlp, ffmpeg and Deno
           Videolader.exe --help
+          Videolader.exe --version
 
         Without arguments the window opens.
 
@@ -623,6 +624,7 @@ public static class UiText
           Videolader.exe <Link-oder-ID> [<Link-oder-ID> ...] [Optionen]
           Videolader.exe setup            yt-dlp, ffmpeg und Deno herunterladen bzw. aktualisieren
           Videolader.exe --help
+          Videolader.exe --version
 
         Ohne Argumente startet die Oberfläche.
 
@@ -658,6 +660,7 @@ public static class UiText
           Videolader.exe <ссылка-или-ID> [<ссылка-или-ID> ...] [параметры]
           Videolader.exe setup            скачать или обновить yt-dlp, ffmpeg и Deno
           Videolader.exe --help
+          Videolader.exe --version
 
         Без аргументов открывается окно программы.
 

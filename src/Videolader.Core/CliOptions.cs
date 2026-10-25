@@ -5,6 +5,9 @@ public sealed class CliOptions
 {
     public bool Help { get; set; }
 
+    /// <summary><c>--version</c>: print the version and exit.</summary>
+    public bool ShowVersion { get; set; }
+
     /// <summary>"setup": download or update yt-dlp, ffmpeg and Deno.</summary>
     public bool Setup { get; set; }
 
@@ -86,6 +89,9 @@ public static class CliArguments
                 case "--help" or "-h" or "-?" or "/?" or "help":
                     options.Help = true;
                     break;
+                case "--version":
+                    options.ShowVersion = true;
+                    break;
                 case "--list":
                     options.ListOnly = true;
                     break;
@@ -149,7 +155,7 @@ public static class CliArguments
             }
         }
 
-        if (!options.Help && !options.Setup && options.Inputs.Count == 0)
+        if (!options.Help && !options.ShowVersion && !options.Setup && options.Inputs.Count == 0)
             return Fail(UiText.CliNeedLinkOrId);
 
         return new CliParseResult(options, null);

@@ -91,7 +91,7 @@ internal sealed class MainForm : Form
         _toolsDirectory = ToolLocator.GetToolsDirectory(AppContext.BaseDirectory);
         _tools = ToolLocator.Locate(_toolsDirectory, AppContext.BaseDirectory);
 
-        Text = AppTitle;
+        Text = $"{AppTitle} {AppVersion.Current}";
         Icon = UiStyle.AppIcon;
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(960, 640);

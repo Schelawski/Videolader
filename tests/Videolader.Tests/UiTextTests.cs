@@ -81,7 +81,7 @@ public sealed class UiTextTests : IDisposable
 
         foreach (var option in new[]
                  {
-                     "setup", "--help", "--id", "--playlist", "--url", "--out", "--quality", "--subs", "--no-subs", "--limit",
+                     "setup", "--help", "--version", "--id", "--playlist", "--url", "--out", "--quality", "--subs", "--no-subs", "--limit",
                      "--pause", "--cookies", "--no-skip", "--list", "--json", "--verbose", "--lang",
                  })
         {
