@@ -37,11 +37,11 @@ internal sealed class MainForm : Form
     private readonly TextBox _txtFolder = new() { Dock = DockStyle.Fill, Margin = new Padding(3, 4, 3, 3) };
     private readonly Button _btnBrowse = UiStyle.CreateButton(UiText.Browse);
     private readonly Button _btnOpenFolder = UiStyle.CreateButton(UiText.Open);
-    private readonly ComboBox _cmbQuality = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
+    private readonly ComboBox _cmbQuality = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 180, DropDownWidth = 210 };
     private readonly ComboBox _cmbCookies = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190 };
     private readonly CheckBox _chkSubtitles = new() { Text = UiText.DownloadSubtitles, AutoSize = true, Margin = new Padding(3, 5, 12, 3) };
     private readonly TextBox _txtLanguages = new() { Width = 110 };
-    private readonly CheckBox _chkSkip = new() { Text = UiText.SkipExisting, AutoSize = true, Margin = new Padding(12, 5, 3, 3) };
+    private readonly CheckBox _chkSkip = new() { Text = UiText.SkipExisting, AutoSize = true, Margin = new Padding(3, 5, 3, 3) };
     private readonly NumericUpDown _numPause = new() { Width = 60, Minimum = 0, Maximum = AppSettings.MaxPauseSeconds };
     private readonly CheckBox _chkRandomPause = new() { Text = UiText.RandomPause, AutoSize = true, Margin = new Padding(6, 5, 3, 3) };
     private readonly NumericUpDown _numMaxVideos = new() { Width = 70, Minimum = 0, Maximum = AppSettings.MaxVideosPerRunLimit };
@@ -60,7 +60,7 @@ internal sealed class MainForm : Form
     private readonly DataGridViewTextBoxColumn _colNr = TextColumn(UiText.ColumnNumber, 44);
     private readonly DataGridViewTextBoxColumn _colId = TextColumn("ID", 110);
     private readonly DataGridViewTextBoxColumn _colTitle = TextColumn(UiText.ColumnTitle, 0);
-    private readonly DataGridViewTextBoxColumn _colDuration = TextColumn(UiText.ColumnDuration, 70);
+    private readonly DataGridViewTextBoxColumn _colDuration = TextColumn(UiText.ColumnDuration, 80);
     private readonly DataGridViewTextBoxColumn _colPlaylist = TextColumn(UiText.ColumnPlaylist, 170);
     private readonly DataGridViewTextBoxColumn _colStatus = TextColumn(UiText.ColumnStatus, 190);
     private readonly Button _btnAll = UiStyle.CreateButton(UiText.SelectAll);
@@ -258,13 +258,13 @@ internal sealed class MainForm : Form
             _cmbQuality.Items.Add(new Choice<VideoQuality>(quality, quality.GetDisplayName()));
 
         AddRow(table, UiText.OutputFolderLabel, folderRow);
-        AddRow(table, UiText.QualityLabel, Flow(
-            _cmbQuality, Badge(HelpTopics.Quality, UiText.HelpTipQuality), _chkSkip, Badge(HelpTopics.Existing, UiText.HelpTipExisting)));
+        AddRow(table, UiText.QualityLabel, Flow(_cmbQuality, Badge(HelpTopics.Quality, UiText.HelpTipQuality)));
         AddRow(table, UiText.SubtitlesLabel, Flow(
             _chkSubtitles, UiStyle.CreateLabel(UiText.LanguagesLabel), _txtLanguages, Badge(HelpTopics.Quality, UiText.HelpTipQuality)));
         AddRow(table, UiText.PauseLabel, Flow(
             _numPause, UiStyle.CreateLabel(UiText.SecondsUnit), _chkRandomPause, Badge(HelpTopics.Pause, UiText.HelpTipPause)));
         AddRow(table, UiText.LimitLabel, Flow(_numMaxVideos, UiStyle.CreateLabel(UiText.VideosPerRun), UiStyle.CreateHint(UiText.LimitHint)));
+        AddRow(table, string.Empty, Flow(_chkSkip, Badge(HelpTopics.Existing, UiText.HelpTipExisting)));
 
         _tips.SetToolTip(_chkSkip, UiText.TipSkipExisting);
         _tips.SetToolTip(_txtLanguages, UiText.TipLanguages);
@@ -323,8 +323,8 @@ internal sealed class MainForm : Form
 
         _split.Panel1.Controls.Add(listPanel);
         _split.Panel2.Controls.Add(logGroup);
-        _split.Panel1MinSize = 120;
-        _split.Panel2MinSize = 60;
+        _split.Panel1MinSize = 80;
+        _split.Panel2MinSize = 40;
         _split.Margin = Padding.Empty;
         return _split;
     }
@@ -370,6 +370,8 @@ internal sealed class MainForm : Form
         _grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         _grid.EnableHeadersVisualStyles = true;
         _grid.RowTemplate.Height = 24;
+        _grid.DefaultCellStyle.SelectionBackColor = UiStyle.Selection;
+        _grid.DefaultCellStyle.SelectionForeColor = SystemColors.ControlText;
 
         _colId.DefaultCellStyle.Font = UiStyle.CreateMonospaceFont();
         _colTitle.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;

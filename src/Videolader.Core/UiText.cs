@@ -133,7 +133,7 @@ public static class UiText
     public static string RandomPause => L("random up to +50%", "zufällig bis +50 %", "случайно до +50 %");
     public static string LimitLabel => L("Limit:", "Limit:", "Лимит:");
     public static string VideosPerRun => L("videos per run", "Videos pro Lauf", "видео за запуск");
-    public static string LimitHint => L("(0 = all checked)", "(0 = alle markierten)", "(0 = все отмеченные)");
+    public static string LimitHint => L("(0 = all checked)", "(0 = alle markierten)", "(0 = все)");
 
     public static string TipSkipExisting => L(
         "Skip videos that are already in the folder or listed in the archive.",

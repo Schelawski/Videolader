@@ -1,10 +1,14 @@
 namespace Videolader.UI;
 
-/// <summary>Colors and small control factories shared by the window (same look as Wortlaut).</summary>
+/// <summary>Colors and small control factories shared by the windows (layout as in Wortlaut, colors from the red app icon).</summary>
 internal static class UiStyle
 {
-    public static readonly Color Accent = Color.FromArgb(37, 99, 235);
-    public static readonly Color AccentDisabled = Color.FromArgb(191, 207, 240);
+    /// <summary>Cinema red between the two colors of the app icon (#E8424F → #A8173A); white text on it stays readable.</summary>
+    public static readonly Color Accent = Color.FromArgb(198, 40, 64);
+    public static readonly Color AccentDisabled = Color.FromArgb(236, 190, 198);
+
+    /// <summary>Background of selected rows in the video list (instead of the Windows blue).</summary>
+    public static readonly Color Selection = Color.FromArgb(252, 228, 232);
     public static readonly Color MutedText = Color.FromArgb(75, 85, 99);
     public static readonly Color GridLine = Color.FromArgb(229, 231, 235);
 
@@ -17,7 +21,8 @@ internal static class UiStyle
     /// <summary>Background and text color of a small round badge.</summary>
     public readonly record struct Badge(Color Back, Color Fore);
 
-    public static readonly Badge Info = new(Color.FromArgb(219, 234, 254), Color.FromArgb(30, 64, 175));
+    /// <summary>The "?" next to the settings: light rose with the dark red of the icon.</summary>
+    public static readonly Badge Info = new(Color.FromArgb(252, 228, 232), Color.FromArgb(168, 23, 58));
 
     /// <summary>The icon embedded in Videolader.exe (see ApplicationIcon in the project), for the window title bars.</summary>
     public static Icon? AppIcon { get; } = Icon.ExtractAssociatedIcon(Environment.ProcessPath ?? Application.ExecutablePath);
