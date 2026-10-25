@@ -14,7 +14,7 @@
     <Product>Videolader</Product>
     <Description>Downloads YouTube videos and playlists with yt-dlp, named by video ID, with metadata and subtitles.</Description>
     <Version>1.0.0</Version>
-    <!-- Own icon: blue rounded square with a download arrow (no YouTube logo or colors). -->
+    <!-- Own icon: cinema-red rounded square with a download arrow (no YouTube logo, darker than YouTube red). -->
     <ApplicationIcon>Videolader.ico</ApplicationIcon>
 
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
