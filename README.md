@@ -1,5 +1,7 @@
 # Videolader
 
+[![Build](https://github.com/Schelawski/Videolader/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/Schelawski/Videolader/actions/workflows/build.yml)
+
 Kleine Windows-Desktop-App, die YouTube-Videos und ganze Playlists herunterlädt. Die Dateien werden
 nach der **Video-ID** benannt, daneben liegen eine Metadaten-Datei und auf Wunsch die Untertitel
 im Whisper-JSON-Format. Bereits heruntergeladene Videos werden erkannt und übersprungen.

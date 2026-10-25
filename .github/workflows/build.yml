@@ -1,0 +1,46 @@
+# Builds and tests every push to develop/master and every pull request. Publishes nothing.
+#
+# Pull requests from forks run with a read-only token and without access to secrets
+# ("pull_request", not "pull_request_target"). GitHub asks the maintainer to approve the first run
+# of a first-time contributor (Settings → Actions → General); keep that setting.
+name: Build
+
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Test
+        run: dotnet test --configuration Release
+
+      - name: Publish
+        run: dotnet publish src/Videolader --configuration Release --output publish
+
+      # A test build of the exe for each push (not for pull requests), kept for two weeks.
+      - name: Upload test build
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Videolader-${{ github.sha }}
+          path: publish/Videolader.exe
+          retention-days: 14
+          if-no-files-found: error
