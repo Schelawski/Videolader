@@ -75,6 +75,18 @@ internal sealed class MainForm : Form
     private readonly Button _btnDownload = UiStyle.CreateButton(UiText.Download);
     private readonly Button _btnCancel = UiStyle.CreateButton(UiText.Cancel);
     private readonly Button _btnHelp = UiStyle.CreateButton(UiText.HelpButton);
+    private readonly CheckBox _chkUpdates = new() { Text = UiText.CheckForUpdates, AutoSize = true, Margin = new Padding(3, 5, 3, 3) };
+
+    /// <summary>"New version 1.2.0 available" next to "Help"; only visible when there is one (see CheckForUpdatesAsync).</summary>
+    private readonly LinkLabel _lnkUpdate = new()
+    {
+        AutoSize = true,
+        Visible = false,
+        Anchor = AnchorStyles.Right,
+        Margin = new Padding(12, 0, 12, 0),
+        LinkColor = UiStyle.Accent,
+        ActiveLinkColor = UiStyle.Accent,
+    };
 
     /// <summary>Help topic of the last tip in the log; F1 in the log or list opens it.</summary>
     private string? _lastHelpTopic;
@@ -298,6 +310,7 @@ internal sealed class MainForm : Form
         AddRow(table, UiText.CookiesLabel, WithHint(Flow(_cmbCookies, Badge(HelpTopics.Cookies, UiText.HelpTipCookies)), UiText.CookiesHint));
         AddRow(table, UiText.ApiKeyLabel, WithHint(Flow(_txtApiKey, _chkShowKey, Badge(HelpTopics.ApiKey, UiText.HelpTipApiKey)), UiText.ApiKeyHint));
         AddRow(table, UiText.ToolsLabel, WithHint(Flow(_lblTools, _btnTools, Badge(HelpTopics.Tools, UiText.HelpTipTools)), UiText.ToolsHint(_toolsDirectory)));
+        AddRow(table, UiText.UpdatesLabel, WithHint(Flow(_chkUpdates), UiText.CheckForUpdatesHint));
         return table;
     }
 
@@ -337,11 +350,14 @@ internal sealed class MainForm : Form
         _btnHelp.MinimumSize = new Size(0, 34);
         _tips.SetToolTip(_btnHelp, UiText.HelpButtonTooltip);
 
-        var bar = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, AutoSize = true, Margin = new Padding(0, 8, 0, 0) };
+        var bar = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, AutoSize = true, Margin = new Padding(0, 8, 0, 0) };
         bar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         bar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        bar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         bar.Controls.Add(Flow(_btnDownload, _btnCancel, _progress, _lblProgress), 0, 0);
-        bar.Controls.Add(_btnHelp, 1, 0);
+        bar.Controls.Add(_lnkUpdate, 1, 0);
+        bar.Controls.Add(_btnHelp, 2, 0);
+        _tips.SetToolTip(_lnkUpdate, UiText.UpdateAvailableTip);
         return bar;
     }
 
@@ -414,6 +430,15 @@ internal sealed class MainForm : Form
         _btnTools.Click += async (_, _) => await SetUpToolsAsync();
         _btnToggleLog.Click += (_, _) => SetLogVisible(_split.Panel2Collapsed);
         _btnHelp.Click += (_, _) => HelpForm.Open(this, HelpTopicForFocus());
+        _lnkUpdate.LinkClicked += (_, _) => OpenUrl(_lnkUpdate.Tag as string ?? UpdateChecker.ReleasesPageUrl);
+        _chkUpdates.CheckedChanged += async (_, _) =>
+        {
+            _settings.CheckForUpdates = _chkUpdates.Checked;
+            if (!_chkUpdates.Checked)
+                _lnkUpdate.Visible = false;
+            else
+                await CheckForUpdatesAsync();
+        };
         _cmbUiLanguage.SelectionChangeCommitted += (_, _) => SwitchUiLanguage();
 
         _btnAll.Click += (_, _) => SetChecked(_ => true);
@@ -457,6 +482,7 @@ internal sealed class MainForm : Form
 
     private async void OnShown(object? sender, EventArgs e)
     {
+        _ = CheckForUpdatesAsync();
         var maxDistance = _split.Height - _split.Panel2MinSize - _split.SplitterWidth;
         if (maxDistance > _split.Panel1MinSize)
             _split.SplitterDistance = Math.Clamp((int)(_split.Height * 0.75), _split.Panel1MinSize, maxDistance);
@@ -533,6 +559,39 @@ internal sealed class MainForm : Form
         var title = HelpDocument.Load(UiLanguages.Code(UiText.Language)).Find(topicId)?.Title;
         return title is null ? string.Empty : " " + UiText.SeeHelp(title);
     }
+
+    /// <summary>
+    /// Asks GitHub at most once a day for the newest version (only the version number) and remembers the answer;
+    /// shows a link next to "Help" while a newer version than this one exists. Never disturbs: no dialog, and
+    /// without internet nothing happens (the check is repeated on the next start).
+    /// </summary>
+    private async Task CheckForUpdatesAsync()
+    {
+        if (!_settings.CheckForUpdates)
+            return;
+
+        var today = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        if (_settings.LastUpdateCheck != today)
+        {
+            var (reached, latest) = await new UpdateChecker(Http).FetchLatestReleaseAsync(CancellationToken.None);
+            if (reached && !IsDisposed)
+            {
+                _settings.LastUpdateCheck = today;
+                _settings.NewestVersion = latest?.Version ?? string.Empty;
+                _settings.NewestVersionUrl = latest?.PageUrl.AbsoluteUri ?? string.Empty;
+                SaveSettings();
+            }
+        }
+
+        if (IsDisposed || !_settings.CheckForUpdates || !AppVersion.IsNewer(_settings.NewestVersion, AppVersion.Current))
+            return;
+
+        _lnkUpdate.Text = UiText.UpdateAvailable(_settings.NewestVersion);
+        _lnkUpdate.Tag = _settings.NewestVersionUrl.Length > 0 ? _settings.NewestVersionUrl : UpdateChecker.ReleasesPageUrl;
+        _lnkUpdate.Visible = true;
+    }
+
+    private static void OpenUrl(string url) => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
 
     /// <summary>Saves the choice and closes the window; Program reopens it in the new language.</summary>
     private void SwitchUiLanguage()
@@ -1015,6 +1074,7 @@ internal sealed class MainForm : Form
         _numMaxVideos.Value = _settings.MaxVideosPerRun;
         _txtApiKey.Text = _settings.ApiKey;
         _cmbUiLanguage.SelectedItem = _cmbUiLanguage.Items.Cast<Choice<UiLanguage>>().First(c => c.Value == UiText.Language);
+        _chkUpdates.Checked = _settings.CheckForUpdates;
         SetLogVisible(_settings.ShowLog);
     }
 

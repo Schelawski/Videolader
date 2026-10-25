@@ -35,5 +35,7 @@ The first public version of Videolader.
 - Built-in help in plain language (“Help”, F1, “?” next to the settings), including experience from
   practice about pauses and cookies.
 - The list gets most of the window; the log can be hidden. The version is shown in the window title.
+- Points to new versions: once a day only the version number is requested from GitHub, and a link next to
+  “Help” leads to the download page. Can be switched off under Settings → Updates.
 - Command line for scripts and the Task Scheduler (`Videolader.exe --help`, `--version`, `--json`).
 - One self-contained `Videolader.exe`, no installation needed.

@@ -29,7 +29,7 @@ Videolader collects no data about you and sends nothing to the developer: no acc
 
 - **YouTube** – to load lists, titles and videos.
 - **YouTube Data API** by Google – only if you enter your own API key.
-- **GitHub** – to download and update yt-dlp, ffmpeg and Deno.
+- **GitHub** – to download and update yt-dlp, ffmpeg and Deno, and once a day to ask for a new version of Videolader (only the version number; can be switched off under “Settings” next to “Updates”).
 
 Videolader reads cookies from the browser only if you choose a browser, and passes them only to yt-dlp, which uses them for its requests to YouTube. Settings and API key stay on your computer, the key encrypted.
 

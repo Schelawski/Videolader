@@ -59,6 +59,17 @@ public sealed class AppSettings
     /// <summary>Last content of the input box.</summary>
     public string LastInput { get; set; } = string.Empty;
 
+    /// <summary>Look for a newer Videolader on GitHub once a day (only the version number is requested).</summary>
+    public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>Day GitHub last answered the update check (yyyy-MM-dd).</summary>
+    public string LastUpdateCheck { get; set; } = string.Empty;
+
+    /// <summary>Newest released version seen at the last update check ("" = none yet) and its release page.</summary>
+    public string NewestVersion { get; set; } = string.Empty;
+
+    public string NewestVersionUrl { get; set; } = string.Empty;
+
     /// <summary>Day of the last automatic yt-dlp update (yyyy-MM-dd).</summary>
     public string LastToolUpdate { get; set; } = string.Empty;
 
@@ -82,6 +93,9 @@ public sealed class AppSettings
         UiLanguage = UiLanguages.FromCode(UiLanguage) is { } language ? UiLanguages.Code(language) : string.Empty;
         LastInput ??= string.Empty;
         LastToolUpdate ??= string.Empty;
+        LastUpdateCheck ??= string.Empty;
+        NewestVersion ??= string.Empty;
+        NewestVersionUrl ??= string.Empty;
     }
 }
 

@@ -26,6 +26,7 @@ public sealed class UiTextTests : IDisposable
         nameof(UiText.LimitLabel),
         nameof(UiText.ColumnPlaylist),
         nameof(UiText.ColumnStatus),
+        nameof(UiText.UpdatesLabel),
     ];
 
     public UiTextTests() => UiText.Language = UiLanguage.English;

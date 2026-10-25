@@ -40,6 +40,8 @@ solutions”).
   on the first start (German or Russian, otherwise English) and can be switched under **Settings → Language**.
 - Built-in **help** (button “Help”, F1, or the small “?” next to the settings).
 - Downloads yt-dlp, ffmpeg and Deno itself and checks them against the published SHA-256 checksums.
+- Shows a link next to “Help” when a new version is available (once a day only the version number is
+  requested from GitHub; can be switched off).
 - **Command line** for scripts and the Task Scheduler.
 - One self-contained `Videolader.exe` – no .NET installation needed.
 
@@ -260,7 +262,8 @@ connects to:
 
 - **YouTube**, to load lists, titles and videos,
 - the **YouTube Data API** by Google, only with your own API key,
-- **GitHub**, to download and update yt-dlp, ffmpeg and Deno.
+- **GitHub**, to download and update yt-dlp, ffmpeg and Deno, and once a day to ask for a new version of
+  Videolader (only the version number; switch it off under **Settings → Updates**).
 
 Cookies from the browser are only read if a browser is chosen, and only passed to yt-dlp. Settings and API
 key stay on the computer, the key encrypted with Windows DPAPI.

@@ -247,7 +247,8 @@ keine Werbung. Verbindungen gibt es nur zu:
 
 - **YouTube**, um Listen, Titel und Videos zu laden,
 - der **YouTube Data API** von Google, nur mit eigenem API-Key,
-- **GitHub**, um yt-dlp, ffmpeg und Deno herunterzuladen und zu aktualisieren.
+- **GitHub**, um yt-dlp, ffmpeg und Deno herunterzuladen und zu aktualisieren, und einmal am Tag, um nach
+  einer neuen Videolader-Version zu fragen (nur die Versionsnummer, abschaltbar unter **Einstellungen → Updates**).
 
 Cookies aus dem Browser werden nur gelesen, wenn ein Browser ausgewählt ist, und nur an yt-dlp
 übergeben. Einstellungen und API-Key bleiben auf dem Rechner, der Key mit Windows DPAPI

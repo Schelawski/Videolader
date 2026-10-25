@@ -204,6 +204,20 @@ public static class UiText
         "Das Fenster öffnet sich in der gewählten Sprache neu.",
         "Окно откроется заново на выбранном языке.");
 
+    public static string UpdatesLabel => L("Updates:", "Updates:", "Обновления:");
+    public static string CheckForUpdates => L("Look for new versions of Videolader", "Nach neuen Versionen von Videolader suchen", "Искать новые версии Videolader");
+
+    public static string CheckForUpdatesHint => L(
+        "Once a day only the version number is requested from GitHub; nothing about you or your videos is sent.",
+        "Einmal am Tag wird nur die Versionsnummer bei GitHub abgefragt; nichts über dich oder deine Videos wird gesendet.",
+        "Раз в день у GitHub запрашивается только номер версии; ничего о вас или ваших видео не передаётся.");
+
+    public static string UpdateAvailable(string version) => L(
+        $"New version {version} available", $"Neue Version {version} verfügbar", $"Доступна новая версия {version}");
+
+    public static string UpdateAvailableTip => L(
+        "Opens the download page on GitHub.", "Öffnet die Download-Seite auf GitHub.", "Открывает страницу загрузки на GitHub.");
+
     public static string CookiesLabel => L("Cookies from browser:", "Cookies aus Browser:", "Cookies из браузера:");
     public static string CookiesNone => L("none", "keine", "нет");
 
