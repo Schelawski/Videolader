@@ -11,8 +11,6 @@ All notable changes to Videolader. The section of a version becomes its release 
   while downloading.
 
 ### Changed
-- Subtitles are downloaded in a second step with 3 retries instead of 10, so videos without available
-  subtitles no longer hold up the run. Video and audio keep 10 retries.
 - The list follows the running download more reliably: the video is shown in the third row, also when it was
   half hidden at the bottom of the list.
 

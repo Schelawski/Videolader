@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Videolader.Core;
 
 /// <summary>What to download for one video.</summary>
@@ -30,13 +28,6 @@ public static class YtDlpCommandLine
     /// <summary>Options every call uses: ignore user config files, plain output.</summary>
     private static readonly string[] CommonArguments = ["--ignore-config", "--color", "never", "--encoding", "utf-8"];
 
-    /// <summary>Retries for video and audio: long downloads often hit short network hiccups.</summary>
-    public const int MediaRetries = 10;
-
-    /// <summary>Retries for subtitles: missing subtitles (e.g. HTTP 429) usually stay missing.</summary>
-    public const int SubtitleRetries = 3;
-
-    /// <summary>Downloads video/audio and the raw info JSON. Subtitles follow in <see cref="BuildSubtitles"/>.</summary>
     public static IReadOnlyList<string> BuildDownload(DownloadOptions options)
     {
         var args = new List<string>(CommonArguments)
@@ -45,8 +36,8 @@ public static class YtDlpCommandLine
             "--newline",
             "--progress-template", ProgressTemplate,
             "--no-mtime",
-            "--retries", MediaRetries.ToString(CultureInfo.InvariantCulture),
-            "--fragment-retries", MediaRetries.ToString(CultureInfo.InvariantCulture),
+            "--retries", "10",
+            "--fragment-retries", "10",
             "-P", "home:" + options.OutputFolder,
             "-P", "temp:" + options.TempFolder,
             "-o", "%(id)s.%(ext)s",
@@ -59,39 +50,25 @@ public static class YtDlpCommandLine
 
         args.AddRange(options.Quality.GetFormatArguments());
 
+        if (options.Subtitles && options.SubtitleLanguages.Count > 0)
+        {
+            args.AddRange(
+            [
+                "--write-subs",
+                "--write-auto-subs",
+                "--sub-langs", string.Join(',', options.SubtitleLanguages),
+                // json3 is YouTube's native format with clean timings; vtt as fallback.
+                "--sub-format", "json3/vtt",
+                "-o", "subtitle:" + Path.Combine(options.TempFolder, "%(id)s.%(ext)s"),
+            ]);
+        }
+
         AddCookies(args, options.CookiesBrowser);
         AddContentLanguage(args, options.ContentLanguage);
 
         // "--" so an ID starting with "-" is not read as an option.
         args.Add("--");
         args.Add(YouTubeUrls.Video(options.VideoId));
-        return args;
-    }
-
-    /// <summary>
-    /// Downloads only the subtitles, using the info JSON the video download left in the temp folder
-    /// (the subtitle URLs are in it, so the video page is not requested again).
-    /// A separate call because yt-dlp has no retry count of its own for subtitles.
-    /// </summary>
-    public static IReadOnlyList<string> BuildSubtitles(DownloadOptions options, string infoJsonFile)
-    {
-        var args = new List<string>(CommonArguments)
-        {
-            "--load-info-json", infoJsonFile,
-            "--skip-download",
-            "--ignore-no-formats-error",
-            "--no-progress",
-            "--retries", SubtitleRetries.ToString(CultureInfo.InvariantCulture),
-            "--write-subs",
-            "--write-auto-subs",
-            "--sub-langs", string.Join(',', options.SubtitleLanguages),
-            // json3 is YouTube's native format with clean timings; vtt as fallback.
-            "--sub-format", "json3/vtt",
-            "-P", "temp:" + options.TempFolder,
-            "-o", "subtitle:" + Path.Combine(options.TempFolder, "%(id)s.%(ext)s"),
-        };
-
-        AddCookies(args, options.CookiesBrowser);
         return args;
     }
 
