@@ -1236,12 +1236,24 @@ internal sealed class MainForm : Form
         row.Row.DefaultCellStyle.ForeColor = status == RowStatus.Unavailable ? UiStyle.DisabledText : Color.Empty;
     }
 
+    /// <summary>
+    /// Scrolls only when the row is not fully visible, then shows it in the third line so the two rows before it
+    /// stay in view. Row.Displayed is not used: it is also true for a half-hidden row at the bottom.
+    /// </summary>
     private void ScrollIntoView(VideoRow row)
     {
+        const int rowsAbove = 2;
+        var first = _grid.FirstDisplayedScrollingRowIndex;
+        var visible = _grid.DisplayedRowCount(includePartialRow: false);
+        var index = row.Row.Index;
+        if (first >= 0 && index >= first && index < first + visible)
+            return;
+
         try
         {
-            if (!row.Row.Displayed)
-                _grid.FirstDisplayedScrollingRowIndex = Math.Max(0, row.Row.Index - 3);
+            // In a very short list the row itself must still fit.
+            var above = Math.Min(rowsAbove, Math.Max(0, visible - 1));
+            _grid.FirstDisplayedScrollingRowIndex = Math.Max(0, index - above);
         }
         catch (InvalidOperationException)
         {

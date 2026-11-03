@@ -434,6 +434,11 @@ public static class UiText
         $"Untertitel {language} konnten nicht umgewandelt werden: {message}",
         $"Не удалось преобразовать субтитры {language}: {message}");
 
+    public static string SubtitlesNeedInfoJson => L(
+        "Subtitles skipped: yt-dlp wrote no info JSON.",
+        "Untertitel übersprungen: yt-dlp hat keine Info-JSON geschrieben.",
+        "Субтитры пропущены: yt-dlp не записал info JSON.");
+
     public static string NoSubtitlesFound => L(
         "No subtitles found in the chosen languages.",
         "Keine Untertitel in den gewählten Sprachen gefunden.",

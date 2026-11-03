@@ -26,23 +26,34 @@ public class YtDlpTests
     }
 
     [Fact]
-    public void Download_with_subtitles_requests_json3_both_kinds()
+    public void Download_leaves_subtitles_to_the_second_call_and_keeps_ten_retries()
     {
-        var args = YtDlpCommandLine.BuildDownload(Options());
+        var args = YtDlpCommandLine.BuildDownload(Options(cookies: "firefox"));
 
+        Assert.DoesNotContain("--write-subs", args);
+        Assert.DoesNotContain("--write-auto-subs", args);
+        Assert.Contains("--write-info-json", args);
+        Assert.Equal("10", args[args.ToList().IndexOf("--retries") + 1]);
+        Assert.Equal("10", args[args.ToList().IndexOf("--fragment-retries") + 1]);
+        Assert.Equal("firefox", args[args.ToList().IndexOf("--cookies-from-browser") + 1]);
+    }
+
+    [Fact]
+    public void Subtitles_load_the_info_json_request_json3_both_kinds_and_retry_three_times()
+    {
+        var infoJson = Path.Combine("D:", "Videos", ".videolader-temp", "-abcdefghij.info.json");
+        var args = YtDlpCommandLine.BuildSubtitles(Options(cookies: "firefox"), infoJson);
+
+        Assert.Equal(infoJson, args[args.ToList().IndexOf("--load-info-json") + 1]);
+        Assert.Contains("--skip-download", args);
         Assert.Contains("--write-subs", args);
         Assert.Contains("--write-auto-subs", args);
         Assert.Equal("ru,de", args[args.ToList().IndexOf("--sub-langs") + 1]);
         Assert.Equal("json3/vtt", args[args.ToList().IndexOf("--sub-format") + 1]);
-    }
-
-    [Fact]
-    public void Download_without_subtitles_and_with_cookies()
-    {
-        var args = YtDlpCommandLine.BuildDownload(Options(subtitles: false, cookies: "firefox"));
-
-        Assert.DoesNotContain("--write-subs", args);
+        Assert.Equal("3", args[args.ToList().IndexOf("--retries") + 1]);
         Assert.Equal("firefox", args[args.ToList().IndexOf("--cookies-from-browser") + 1]);
+        // No URL: the video page is not requested again.
+        Assert.DoesNotContain(args, a => a.StartsWith("https://", StringComparison.Ordinal));
     }
 
     [Fact]

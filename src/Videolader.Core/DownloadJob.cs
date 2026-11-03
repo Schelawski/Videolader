@@ -71,24 +71,17 @@ public sealed class DownloadJob
 
         string? lastError = null;
         var mediaStream = 0;
-        var inSubtitleStream = false;
         void OnLine(string line)
         {
             if (YtDlpOutput.TryParseProgress(line, out var p))
             {
-                // Subtitles are tiny; only video/audio streams move the progress bar.
-                if (p.Percent is { } percent && !inSubtitleStream)
+                if (p.Percent is { } percent)
                     progress.Report(new DownloadUpdate(Percent: percent, Phase: mediaStream > 1 ? UiText.PhaseDownloadingPart(mediaStream) : UiText.PhaseDownloading));
                 return;
             }
 
             if (YtDlpOutput.IsNewStream(line))
-            {
-                inSubtitleStream = line.EndsWith(".json3", StringComparison.OrdinalIgnoreCase) ||
-                                   line.EndsWith(".vtt", StringComparison.OrdinalIgnoreCase);
-                if (!inSubtitleStream)
-                    mediaStream++;
-            }
+                mediaStream++;
 
             lastError = YtDlpOutput.TryGetError(line) ?? lastError;
             progress.Report(new DownloadUpdate(LogLine: line, Phase: YtDlpOutput.DetectPhase(line)));
@@ -105,8 +98,12 @@ public sealed class DownloadJob
             return DownloadResult.Failed(error);
         }
 
+        var infoFile = FindYtDlpInfo(tempFolder, entry.Id);
+        if (options.Subtitles && options.SubtitleLanguages.Count > 0)
+            await DownloadSubtitlesAsync(options, infoFile, progress, ct).ConfigureAwait(false);
+
         progress.Report(new DownloadUpdate(Phase: UiText.PhaseWritingFiles));
-        using var infoDocument = ReadYtDlpInfo(tempFolder, entry.Id);
+        using var infoDocument = ReadYtDlpInfo(infoFile);
         JsonElement? info = infoDocument?.RootElement;
 
         var subtitles = settings.DownloadSubtitles
@@ -128,9 +125,29 @@ public sealed class DownloadJob
         return new DownloadResult(true, null, mediaFile, subtitles);
     }
 
-    private static JsonDocument? ReadYtDlpInfo(string tempFolder, string id)
+    /// <summary>Second yt-dlp call for the subtitles only, with fewer retries (see <see cref="YtDlpCommandLine.BuildSubtitles"/>).</summary>
+    private async Task DownloadSubtitlesAsync(
+        DownloadOptions options, string? infoFile, IProgress<DownloadUpdate> progress, CancellationToken ct)
     {
-        var path = Directory.EnumerateFiles(tempFolder, id + "*.info.json").FirstOrDefault();
+        if (infoFile is null)
+        {
+            progress.Report(new DownloadUpdate(LogLine: UiText.SubtitlesNeedInfoJson));
+            return;
+        }
+
+        progress.Report(new DownloadUpdate(Phase: UiText.PhaseSubtitles));
+        void OnLine(string line) => progress.Report(new DownloadUpdate(LogLine: line, Phase: YtDlpOutput.DetectPhase(line)));
+
+        // The exit code does not matter: missing subtitles are reported when converting them.
+        await _runYtDlp(YtDlpCommandLine.BuildSubtitles(options, infoFile), OnLine, ct).ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
+    }
+
+    private static string? FindYtDlpInfo(string tempFolder, string id) =>
+        Directory.EnumerateFiles(tempFolder, id + "*.info.json").FirstOrDefault();
+
+    private static JsonDocument? ReadYtDlpInfo(string? path)
+    {
         if (path is null)
             return null;
 

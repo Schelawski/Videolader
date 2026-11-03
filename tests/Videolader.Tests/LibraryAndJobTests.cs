@@ -57,26 +57,41 @@ public class DownloadJobTests
     private static readonly DateTimeOffset Now = new(2026, 9, 30, 20, 0, 0, TimeSpan.FromHours(2));
 
     /// <summary>Pretends to be yt-dlp: writes the files it would write, based on the arguments.</summary>
-    private static DownloadJob FakeJob(bool writeVideo = true, int exitCode = 0, params string[] lines) => new(
+    private static DownloadJob FakeJob(bool writeVideo = true, int exitCode = 0, params string[] lines) =>
+        FakeJob([], writeVideo, writeInfo: true, exitCode, lines);
+
+    private static DownloadJob FakeJob(
+        List<IReadOnlyList<string>> calls, bool writeVideo = true, bool writeInfo = true, int exitCode = 0, params string[] lines) => new(
         (args, onLine, _) =>
         {
+            calls.Add(args);
+            if (args.Contains("--load-info-json"))
+            {
+                var tempFolder = Path.GetDirectoryName(args[args.ToList().IndexOf("--load-info-json") + 1])!;
+                File.WriteAllText(Path.Combine(tempFolder, Id + ".ru.json3"), Samples.AutoCaptionsJson3);
+                File.WriteAllText(Path.Combine(tempFolder, Id + ".en.json3"), Samples.ManualJson3);
+                return Task.FromResult(0);
+            }
+
             var home = args[args.ToList().IndexOf("-P") + 1]["home:".Length..];
             var temp = args[args.ToList().LastIndexOf("-P") + 1]["temp:".Length..];
 
             foreach (var line in lines)
                 onLine(line);
 
-            File.WriteAllText(Path.Combine(temp, Id + ".info.json"), """
-                {
-                  "id": "aqz-KE-bpKQ", "title": "Лекция 12", "channel": "Ananda Vidya", "channel_id": "UC123",
-                  "upload_date": "20240501", "duration": 3725, "webpage_url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-                  "description": "Beschreibung", "language": "ru",
-                  "subtitles": { "en": [] },
-                  "automatic_captions": { "ru": [] }
-                }
-                """);
-            File.WriteAllText(Path.Combine(temp, Id + ".ru.json3"), Samples.AutoCaptionsJson3);
-            File.WriteAllText(Path.Combine(temp, Id + ".en.json3"), Samples.ManualJson3);
+            if (writeInfo)
+            {
+                File.WriteAllText(Path.Combine(temp, Id + ".info.json"), """
+                    {
+                      "id": "aqz-KE-bpKQ", "title": "Лекция 12", "channel": "Ananda Vidya", "channel_id": "UC123",
+                      "upload_date": "20240501", "duration": 3725, "webpage_url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+                      "description": "Beschreibung", "language": "ru",
+                      "subtitles": { "en": [] },
+                      "automatic_captions": { "ru": [] }
+                    }
+                    """);
+            }
+
             if (writeVideo)
                 File.WriteAllText(Path.Combine(home, Id + ".mp4"), "video");
             return Task.FromResult(exitCode);
@@ -153,6 +168,55 @@ public class DownloadJobTests
         Assert.True(result.Success);
         Assert.Empty(result.Subtitles);
         Assert.False(File.Exists(Path.Combine(folder.Path, Id + ".ru.json")));
+    }
+
+    [Fact]
+    public async Task Subtitles_come_from_a_second_call_on_the_info_json_with_three_retries()
+    {
+        using var folder = new TempFolder();
+        var library = VideoLibrary.Open(folder.Path);
+        var calls = new List<IReadOnlyList<string>>();
+
+        var result = await FakeJob(calls).RunAsync(
+            Samples.Entry(Id), new AppSettings { SubtitleLanguages = "ru,en" }, library, new ListProgress<DownloadUpdate>(), CancellationToken.None);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal(2, calls.Count);
+        Assert.Equal("10", calls[0][calls[0].ToList().IndexOf("--retries") + 1]);
+        Assert.EndsWith(Id + ".info.json", calls[1][calls[1].ToList().IndexOf("--load-info-json") + 1]);
+        Assert.Equal("3", calls[1][calls[1].ToList().IndexOf("--retries") + 1]);
+        Assert.Equal(["en", "ru"], result.Subtitles.Select(s => s.Language).Order());
+    }
+
+    [Fact]
+    public async Task Without_info_json_the_video_is_kept_and_subtitles_are_skipped()
+    {
+        using var folder = new TempFolder();
+        var library = VideoLibrary.Open(folder.Path);
+        var calls = new List<IReadOnlyList<string>>();
+        var progress = new ListProgress<DownloadUpdate>();
+
+        var result = await FakeJob(calls, writeInfo: false).RunAsync(
+            Samples.Entry(Id), new AppSettings(), library, progress, CancellationToken.None);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Single(calls);
+        Assert.Empty(result.Subtitles);
+        Assert.Contains(progress.Items, u => u.LogLine == UiText.SubtitlesNeedInfoJson);
+        Assert.True(library.IsInArchive(Id));
+    }
+
+    [Fact]
+    public async Task Without_subtitles_yt_dlp_runs_only_once()
+    {
+        using var folder = new TempFolder();
+        var library = VideoLibrary.Open(folder.Path);
+        var calls = new List<IReadOnlyList<string>>();
+
+        await FakeJob(calls).RunAsync(
+            Samples.Entry(Id), new AppSettings { DownloadSubtitles = false }, library, new ListProgress<DownloadUpdate>(), CancellationToken.None);
+
+        Assert.Single(calls);
     }
 
     [Fact]
