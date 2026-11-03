@@ -103,8 +103,8 @@ Zeile genau einmal vorkommt.
 2. **Liste laden** (oder Strg+Enter). Playlists werden aufgelöst, doppelte Videos zusammengefasst.
    Jedes Video bekommt einen Status: **Neu**, **Bereits vorhanden** oder **Nicht verfügbar**
    (privat oder gelöscht).
-3. Häkchen prüfen. „Nur neue“ wählt alles, was noch fehlt. Leertaste und Rechtsklick wirken auf
-   markierte Zeilen, Doppelklick öffnet das Video im Browser.
+3. Häkchen prüfen. „Nur neue“ wählt alles, was noch fehlt, „Nur offene zeigen“ blendet Erledigtes aus.
+   Leertaste und Rechtsklick wirken auf markierte Zeilen, Doppelklick öffnet das Video im Browser.
 4. **Herunterladen**. Die Videos werden nacheinander geladen, mit einer einstellbaren Pause
    dazwischen. Ein Fehler stoppt die Liste nicht.
 

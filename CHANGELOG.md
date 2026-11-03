@@ -5,6 +5,11 @@ All notable changes to Videolader. The section of a version becomes its release 
 
 ## [Unreleased]
 
+### Added
+- “Show open only” above the list hides videos that are already there, done, skipped or not available, so the
+  few failed videos of a long list are easy to find. Hidden videos are unchecked; the list does not change
+  while downloading.
+
 ### Changed
 - Subtitles are downloaded in a second step with 3 retries instead of 10, so videos without available
   subtitles no longer hold up the run. Video and audio keep 10 retries.

@@ -108,6 +108,12 @@ public static class UiText
     public static string SelectAll => L("All", "Alle", "Все");
     public static string SelectNone => L("None", "Keine", "Ничего");
     public static string SelectOnlyNew => L("Only new", "Nur neue", "Только новые");
+    public static string ShowOpenOnly => L("Show open only", "Nur offene zeigen", "Только незагруженные");
+
+    public static string TipShowOpenOnly => L(
+        "Hides videos that are already there, done, skipped or not available. Hidden videos are unchecked.",
+        "Blendet Videos aus, die schon vorhanden, fertig, übersprungen oder nicht verfügbar sind. Ausgeblendete Videos verlieren ihr Häkchen.",
+        "Скрывает видео, которые уже есть, загружены, пропущены или недоступны. Со скрытых видео снимается отметка.");
     public static string HideLog => L("Hide log", "Protokoll ausblenden", "Скрыть журнал");
     public static string ShowLog => L("Show log", "Protokoll anzeigen", "Показать журнал");
     public static string Download => L("Download", "Herunterladen", "Скачать");
@@ -266,6 +272,9 @@ public static class UiText
         $"{Videos(total)} · {selected} selected · {existing} existing",
         $"{Videos(total)} · {selected} ausgewählt · {existing} vorhanden",
         $"{Videos(total)} · выбрано: {selected} · имеется: {existing}");
+
+    /// <summary>Appended to <see cref="ListSummary"/> while “Show open only” hides rows.</summary>
+    public static string ListShown(int shown) => L($" · {shown} shown", $" · {shown} angezeigt", $" · показано: {shown}");
 
     public static string TitleUnknown => L("(title unknown)", "(Titel unbekannt)", "(название неизвестно)");
 

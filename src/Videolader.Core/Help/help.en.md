@@ -37,7 +37,7 @@ Videolader reads cookies from the browser only if you choose a browser, and pass
 
 1. **Paste links:** Copy video, playlist or channel links into the box “Videos and playlists”, one per line. Plain IDs and `@ChannelName` work too.
 2. **Load the list:** Click “Load list” (or Ctrl+Enter). Playlists are expanded, duplicate videos merged.
-3. **Choose:** Each video gets a status: “New”, “Already there” or “Not available” (private or deleted). “Only new” checks everything that is still missing.
+3. **Choose:** Each video gets a status: “New”, “Already there” or “Not available” (private or deleted). “Only new” checks everything that is still missing. “Show open only” hides everything that is done – handy when only a few failed videos are left in a long list.
 4. **Download:** Click “Download”. The videos are downloaded one after another, with a pause in between. An error does not stop the list. “Cancel” stops at any time.
 
 ## Tips for the list

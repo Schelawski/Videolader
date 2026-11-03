@@ -37,7 +37,7 @@ Cookies aus dem Browser liest Videolader nur, wenn du einen Browser auswählst, 
 
 1. **Links einfügen:** Kopiere Video-, Playlist- oder Kanal-Links in das Feld „Videos und Playlists“, einen pro Zeile. Auch reine IDs und `@Kanalname` funktionieren.
 2. **Liste laden:** Klicke auf „Liste laden“ (oder Strg+Enter). Playlists werden aufgelöst, doppelte Videos zusammengefasst.
-3. **Auswählen:** Jedes Video bekommt einen Status: „Neu“, „Bereits vorhanden“ oder „Nicht verfügbar“ (privat oder gelöscht). „Nur neue“ setzt die Häkchen bei allem, was noch fehlt.
+3. **Auswählen:** Jedes Video bekommt einen Status: „Neu“, „Bereits vorhanden“ oder „Nicht verfügbar“ (privat oder gelöscht). „Nur neue“ setzt die Häkchen bei allem, was noch fehlt. „Nur offene zeigen“ blendet alles Erledigte aus – praktisch, wenn in einer langen Liste nur noch wenige fehlgeschlagene Videos übrig sind.
 4. **Herunterladen:** Klicke auf „Herunterladen“. Die Videos werden nacheinander geladen, mit einer Pause dazwischen. Ein Fehler stoppt die Liste nicht. Mit „Abbrechen“ hörst du jederzeit auf.
 
 ## Tipps für die Liste

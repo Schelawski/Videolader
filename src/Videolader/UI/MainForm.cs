@@ -66,6 +66,7 @@ internal sealed class MainForm : Form
     private readonly Button _btnAll = UiStyle.CreateButton(UiText.SelectAll);
     private readonly Button _btnNone = UiStyle.CreateButton(UiText.SelectNone);
     private readonly Button _btnOnlyNew = UiStyle.CreateButton(UiText.SelectOnlyNew);
+    private readonly CheckBox _chkOpenOnly = new() { Text = UiText.ShowOpenOnly, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(12, 3, 12, 3) };
     private readonly Label _lblCount = UiStyle.CreateHint(string.Empty);
     private readonly SplitContainer _split = new() { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal };
     private readonly LogBox _log = new();
@@ -323,7 +324,8 @@ internal sealed class MainForm : Form
         var toolbar = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, AutoSize = true, Margin = Padding.Empty };
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        toolbar.Controls.Add(Flow(_btnAll, _btnNone, _btnOnlyNew, _lblCount), 0, 0);
+        toolbar.Controls.Add(Flow(_btnAll, _btnNone, _btnOnlyNew, _chkOpenOnly, _lblCount), 0, 0);
+        _tips.SetToolTip(_chkOpenOnly, UiText.TipShowOpenOnly);
         toolbar.Controls.Add(_btnToggleLog, 1, 0);
         listPanel.Controls.Add(toolbar, 0, 0);
         listPanel.Controls.Add(_grid, 0, 1);
@@ -444,6 +446,7 @@ internal sealed class MainForm : Form
         _btnAll.Click += (_, _) => SetChecked(_ => true);
         _btnNone.Click += (_, _) => SetChecked(_ => false);
         _btnOnlyNew.Click += (_, _) => SetChecked(r => r.Status is RowStatus.New or RowStatus.Failed or RowStatus.Canceled);
+        _chkOpenOnly.CheckedChanged += (_, _) => ApplyFilter();
 
         _grid.CurrentCellDirtyStateChanged += (_, _) =>
         {
@@ -712,8 +715,38 @@ internal sealed class MainForm : Form
             }
         }
 
+        ApplyFilter();
+    }
+
+    /// <summary>
+    /// With “Show open only” hides the videos that need nothing more and unchecks them, so nothing hidden is downloaded.
+    /// Runs only when the switch or the list changes, never during a download: the list would jump with every finished video.
+    /// </summary>
+    private void ApplyFilter()
+    {
+        var openOnly = _chkOpenOnly.Checked;
+
+        // The grid cannot hide the row of the current cell.
+        if (openOnly && _grid.CurrentRow?.Tag is VideoRow current && !IsOpen(current))
+            _grid.CurrentCell = null;
+
+        foreach (var row in _rows)
+        {
+            var show = !openOnly || IsOpen(row);
+            if (!show)
+            {
+                SetChecked(row, false);
+                row.Row.Selected = false;
+            }
+
+            row.Row.Visible = show;
+        }
+
         UpdateCount();
     }
+
+    private static bool IsOpen(VideoRow row) =>
+        row.Status is not (RowStatus.Existing or RowStatus.Done or RowStatus.Skipped or RowStatus.Unavailable);
 
     // ------------------------------------------------------------------ Download
 
@@ -1043,7 +1076,7 @@ internal sealed class MainForm : Form
         foreach (var control in new Control[]
                  {
                      _txtInput, _btnLoad, _btnClearInput, _txtFolder, _btnBrowse, _cmbQuality, _cmbCookies,
-                     _chkSubtitles, _chkSkip, _numPause, _chkRandomPause, _numMaxVideos, _txtApiKey, _btnTools, _cmbUiLanguage, _btnAll, _btnNone, _btnOnlyNew, _btnDownload,
+                     _chkSubtitles, _chkSkip, _numPause, _chkRandomPause, _numMaxVideos, _txtApiKey, _btnTools, _cmbUiLanguage, _btnAll, _btnNone, _btnOnlyNew, _chkOpenOnly, _btnDownload,
                  })
         {
             control.Enabled = !busy;
@@ -1195,7 +1228,7 @@ internal sealed class MainForm : Form
     // ------------------------------------------------------------------ Grid helpers
 
     private IEnumerable<VideoRow> SelectedRows() =>
-        _grid.SelectedRows.Cast<DataGridViewRow>().Select(r => r.Tag).OfType<VideoRow>().OrderBy(r => r.Row.Index);
+        _grid.SelectedRows.Cast<DataGridViewRow>().Where(r => r.Visible).Select(r => r.Tag).OfType<VideoRow>().OrderBy(r => r.Row.Index);
 
     private bool IsChecked(VideoRow row) => row.Row.Cells[_colCheck.Index].Value is true;
 
@@ -1204,7 +1237,7 @@ internal sealed class MainForm : Form
     private void SetChecked(Func<VideoRow, bool> predicate)
     {
         foreach (var row in _rows)
-            SetChecked(row, row.Status != RowStatus.Unavailable && predicate(row));
+            SetChecked(row, row.Row.Visible && row.Status != RowStatus.Unavailable && predicate(row));
         UpdateCount();
     }
 
@@ -1243,17 +1276,25 @@ internal sealed class MainForm : Form
     private void ScrollIntoView(VideoRow row)
     {
         const int rowsAbove = 2;
-        var first = _grid.FirstDisplayedScrollingRowIndex;
+        const DataGridViewElementStates shown = DataGridViewElementStates.Visible;
         var visible = _grid.DisplayedRowCount(includePartialRow: false);
         var index = row.Row.Index;
-        if (first >= 0 && index >= first && index < first + visible)
-            return;
+
+        // Rows hidden by “Show open only” do not count, so walk over the shown rows only.
+        var displayed = _grid.FirstDisplayedScrollingRowIndex;
+        for (var n = 0; displayed >= 0 && n < visible; n++, displayed = _grid.Rows.GetNextRow(displayed, shown))
+        {
+            if (displayed == index)
+                return;
+        }
 
         try
         {
             // In a very short list the row itself must still fit.
-            var above = Math.Min(rowsAbove, Math.Max(0, visible - 1));
-            _grid.FirstDisplayedScrollingRowIndex = Math.Max(0, index - above);
+            var first = index;
+            for (var n = Math.Min(rowsAbove, visible - 1); n > 0 && _grid.Rows.GetPreviousRow(first, shown) is var previous and >= 0; n--)
+                first = previous;
+            _grid.FirstDisplayedScrollingRowIndex = first;
         }
         catch (InvalidOperationException)
         {
@@ -1265,9 +1306,10 @@ internal sealed class MainForm : Form
     {
         var selected = _rows.Count(IsChecked);
         var existing = _rows.Count(r => r.Status is RowStatus.Existing or RowStatus.Done or RowStatus.Skipped);
+        var shown = _rows.Count(r => r.Row.Visible);
         _lblCount.Text = _rows.Count == 0
             ? UiText.NoListLoaded
-            : UiText.ListSummary(_rows.Count, selected, existing);
+            : UiText.ListSummary(_rows.Count, selected, existing) + (shown < _rows.Count ? UiText.ListShown(shown) : string.Empty);
     }
 
     private void OpenSelectedInBrowser()

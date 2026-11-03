@@ -53,8 +53,8 @@ solutions”).
    separate tabs and need their own line with `…/shorts` or `…/streams`).
 2. **Load list** (or Ctrl+Enter). Playlists are expanded, duplicate videos merged. Each video gets a status:
    **New**, **Already there** or **Not available** (private or deleted).
-3. Check the videos. “Only new” checks everything that is still missing. Space and right click act on the
-   selected rows, a double click opens the video in the browser.
+3. Check the videos. “Only new” checks everything that is still missing, “Show open only” hides what is
+   done. Space and right click act on the selected rows, a double click opens the video in the browser.
 4. **Download**. The videos are downloaded one after another, with an adjustable pause in between. An error
    does not stop the list.
 
